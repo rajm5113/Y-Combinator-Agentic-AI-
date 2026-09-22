@@ -60,7 +60,7 @@ def get_redis_client():
     """Initializes a Redis client or falls back to InMemoryCache."""
     try:
         import redis
-        client = redis.from_url(settings.redis_url, decode_responses=True, socket_timeout=1.0)
+        client = redis.from_url(settings.redis_url, decode_responses=True, socket_timeout=3.0)
         client.ping()
         logger.info("Connected to live Redis server")
         return client
