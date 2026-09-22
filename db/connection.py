@@ -147,7 +147,9 @@ def get_db_connection() -> Generator[Any, None, None]:
     to SQLite if PostgreSQL is unavailable or in development mode.
     """
     conn = None
-    if settings.database_url and settings.database_url.startswith("postgresql"):
+    if settings.database_url and (
+        settings.database_url.startswith("postgresql") or settings.database_url.startswith("postgres")
+    ):
         try:
             import psycopg2
             raw_conn = psycopg2.connect(settings.database_url, connect_timeout=3)

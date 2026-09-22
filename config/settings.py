@@ -3,9 +3,10 @@
 Enforces strict Pydantic validation, model catalog tiering, and paths.
 """
 
+import os
 from pathlib import Path
 from typing import List
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -151,16 +152,20 @@ class Settings(BaseSettings):
 
     # Phase 5: Dashboard
     dashboard_host: str = Field(
-        default="127.0.0.1",
-        description="Dashboard server bind address (localhost only for security)",
+        default="0.0.0.0",
+        validation_alias=AliasChoices("HOST", "DASHBOARD_HOST"),
+        description="Dashboard server bind address (0.0.0.0 for cloud/Railway compatibility)",
     )
     dashboard_port: int = Field(
-        default=8501, ge=1024, le=65535,
-        description="Dashboard server port",
+        default=8501,
+        ge=1,
+        le=65535,
+        validation_alias=AliasChoices("PORT", "DASHBOARD_PORT"),
+        description="Dashboard server port (automatically binds to $PORT on Railway/cloud)",
     )
     dashboard_auto_open_browser: bool = Field(
-        default=True,
-        description="Automatically open browser when dashboard launches",
+        default=False if (os.getenv("PORT") or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("DYNO")) else True,
+        description="Automatically open browser when dashboard launches (disabled in cloud environments)",
     )
 
 
