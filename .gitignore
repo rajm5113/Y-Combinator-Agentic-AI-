@@ -1,0 +1,49 @@
+# Environment & Secrets (CRITICAL: NEVER COMMIT SECRETS)
+.env
+.env.*
+!.env.example
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Database & Runtime Storage
+*.db
+*.sqlite
+*.sqlite3
+data/*
+!data/.gitkeep
+backups/
+
+# Runtime Logs & Temp Exports
+*.log
+live_outreach_leads.csv
+
+# IDE & OS Files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Agent Skills Packaging (Local Archives)
+*.skill

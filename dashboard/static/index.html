@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YC Founder Outreach — Human Review & Pipeline Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css?v=6">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <span class="brand-badge">YC AGENT</span>
+      <span>Founder Outreach</span>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item">
+        <button data-view-target="overview" class="active">Overview</button>
+      </li>
+      <li class="nav-item">
+        <button data-view-target="leads">
+          Leads
+          <span id="nav-review-counter" class="nav-counter" style="display: none;">0</span>
+        </button>
+      </li>
+      <li class="nav-item">
+        <button data-view-target="blacklist">Blacklist</button>
+      </li>
+      <li class="nav-item">
+        <button data-view-target="pipeline">Pipeline</button>
+      </li>
+    </ul>
+    <div id="nav-health-status" class="health-badge" title="System Health: Checking..." onclick="checkHealth()">
+      <span id="health-dot" class="health-dot dot-unknown"></span>
+      <span id="health-text" class="health-text">System</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- ════════════════════════════════════════════════════════════
+         VIEW 1: OVERVIEW & FUNNEL METRICS
+         ════════════════════════════════════════════════════════════ -->
+    <section id="view-overview" class="view active">
+      <!-- Quick Review Alert Banner -->
+      <div id="overview-review-banner" class="review-banner" style="display: none;">
+        <div class="review-banner-text">
+          <span>⚡</span>
+          <span><strong id="overview-review-count">0</strong> leads currently need human review!</span>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="switchView('leads')">Review Leads Now →</button>
+      </div>
+
+      <!-- Top Level Conversion Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card attention">
+          <div class="metric-label">Needs Review</div>
+          <div id="metric-needs-review" class="metric-value">0</div>
+          <div class="metric-sub">Drafted outreach awaiting approval</div>
+        </div>
+        <div class="metric-card highlight">
+          <div class="metric-label">Approved</div>
+          <div id="metric-approved" class="metric-value">0</div>
+          <div class="metric-sub">Ready for manual sending</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Sent</div>
+          <div id="metric-sent" class="metric-value">0</div>
+          <div class="metric-sub">Messages manually delivered</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Replied</div>
+          <div id="metric-replied" class="metric-value">0</div>
+          <div class="metric-sub">Founder responses logged</div>
+        </div>
+      </div>
+
+      <!-- Pipeline Funnel Totals -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Discovery & Qualification Funnel</h2>
+          <button class="btn btn-sm btn-secondary" onclick="loadStats()">Refresh Stats</button>
+        </div>
+        <div class="metrics-grid" style="margin-bottom: 0;">
+          <div class="metric-card">
+            <div class="metric-label">Startups Discovered</div>
+            <div id="metric-startups" class="metric-value">0</div>
+            <div class="metric-sub">Across YC batches</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Founders Extracted</div>
+            <div id="metric-founders" class="metric-value">0</div>
+            <div class="metric-sub">Identified with LinkedIn</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Evaluated</div>
+            <div id="metric-evaluated" class="metric-value">0</div>
+            <div class="metric-sub">Assessed by Fit Agent</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">High Fit (Score >= 70)</div>
+            <div id="metric-high-fit" class="metric-value" style="color: #34d399;">0</div>
+            <div class="metric-sub">Strongest alignment</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Medium Fit (50-69)</div>
+            <div id="metric-medium-fit" class="metric-value" style="color: #60a5fa;">0</div>
+            <div class="metric-sub">Good opportunity</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Message Drafts</div>
+            <div id="metric-drafts" class="metric-value">0</div>
+            <div class="metric-sub">Multi-channel generated</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Export Bar -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Export Qualified Leads</h2>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <label style="font-size: 0.875rem; color: var(--text-secondary);">Min Fit Score:</label>
+            <input id="export-min-score" type="number" value="50" min="0" max="100" class="text-input" style="width: 80px;" />
+          </div>
+          <button class="btn btn-secondary" onclick="exportLeads('csv')">📥 Download CSV</button>
+          <button class="btn btn-secondary" onclick="exportLeads('json')">📥 Download JSON</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         VIEW 2: LEADS TABLE & FILTERING
+         ════════════════════════════════════════════════════════════ -->
+    <section id="view-leads" class="view">
+      <!-- Highlight Banner for Leads View -->
+      <div id="leads-review-banner" class="review-banner" style="display: none;">
+        <div class="review-banner-text">
+          <span>⚡</span>
+          <span><strong id="leads-review-count">0</strong> leads waiting for your review</span>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="startSequentialReview()">
+          Start Reviewing Now →
+        </button>
+      </div>
+
+      <!-- Status Filters Tabs -->
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+        <button class="btn btn-sm btn-primary" data-status-filter="pending_review">Pending Review</button>
+        <button class="btn btn-sm btn-secondary" data-status-filter="">All Leads</button>
+        <button class="btn btn-sm btn-secondary" data-status-filter="approved">Approved</button>
+        <button class="btn btn-sm btn-secondary" data-status-filter="sent">Sent</button>
+        <button class="btn btn-sm btn-secondary" data-status-filter="replied">Replied</button>
+        <button class="btn btn-sm btn-secondary" data-status-filter="rejected">Rejected</button>
+        <button class="btn btn-sm btn-secondary" data-status-filter="blacklisted">Blacklisted</button>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <input
+            id="filter-search"
+            type="text"
+            class="search-input"
+            placeholder="Search company or founder name..."
+          />
+        </div>
+        <div style="min-width: 170px;">
+          <select id="filter-batch" class="select-input">
+            <option value="">All Batches</option>
+          </select>
+        </div>
+        <div style="min-width: 150px;">
+          <select id="filter-tier" class="select-input">
+            <option value="">All Fit Tiers</option>
+            <option value="HIGH">HIGH Fit</option>
+            <option value="MEDIUM">MEDIUM Fit</option>
+            <option value="LOW">LOW Fit</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Leads Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Founder</th>
+              <th>Fit Score</th>
+              <th>Status</th>
+              <th>Drafts</th>
+              <th style="width: 140px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="leads-table-body">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading leads...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button id="leads-prev-page" class="btn btn-sm btn-secondary" disabled>← Previous</button>
+        <span id="leads-page-info">Page 1</span>
+        <button id="leads-next-page" class="btn btn-sm btn-secondary" disabled>Next →</button>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         VIEW 3: LEAD DETAIL & HUMAN REVIEW (CORE VIEW)
+         ════════════════════════════════════════════════════════════ -->
+    <section id="view-detail" class="view">
+      <!-- Detail Header with Back & Sequential Nav -->
+      <div class="detail-header">
+        <button class="btn btn-sm btn-secondary" onclick="switchView('leads')">
+          ← Back to Lead Table
+        </button>
+        <div class="detail-nav">
+          <button id="detail-nav-prev" class="btn btn-sm btn-secondary" onclick="navigateSequential(-1)">
+            ← Previous Lead
+          </button>
+          <span id="detail-nav-counter" style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; padding: 0 0.5rem;"></span>
+          <button id="detail-nav-next" class="btn btn-sm btn-secondary" onclick="navigateSequential(1)">
+            Next Lead →
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic Lead Dossier Content Container -->
+      <div id="lead-detail-content"></div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         VIEW 4: BLACKLIST MANAGER
+         ════════════════════════════════════════════════════════════ -->
+    <section id="view-blacklist" class="view">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Add to "Never Contact Again" Blacklist</h2>
+        </div>
+        <form id="blacklist-add-form" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 180px;">
+            <select id="bl-type" class="select-input">
+              <option value="company_name">Company Name</option>
+              <option value="founder_name">Founder Name</option>
+              <option value="linkedin_url">LinkedIn URL</option>
+              <option value="domain">Domain / Website</option>
+            </select>
+          </div>
+          <div style="flex: 2; min-width: 220px;">
+            <input id="bl-value" type="text" class="text-input" placeholder="Identifier value (e.g. Acme Corp)" required />
+          </div>
+          <div style="flex: 2; min-width: 220px;">
+            <input id="bl-reason" type="text" class="text-input" placeholder="Reason for blacklisting" required />
+          </div>
+          <button type="submit" class="btn btn-danger">+ Add to Blacklist</button>
+        </form>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Identifier Value</th>
+              <th>Reason</th>
+              <th>Date Added</th>
+              <th style="width: 100px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="blacklist-table-body">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading blacklist...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         VIEW 5: PIPELINE EXECUTION & 3S POLLING
+         ════════════════════════════════════════════════════════════ -->
+    <section id="view-pipeline" class="view">
+      <!-- Quick Run Again Hero Box (Phase 6) -->
+      <div id="quick-run-card" class="quick-run-box" style="display: none;">
+        <div class="quick-run-info">
+          <span class="quick-run-icon">⚡</span>
+          <div>
+            <div class="quick-run-title">Previous Scan Configuration</div>
+            <div id="quick-run-details" class="quick-run-subtitle">Loading last configuration...</div>
+          </div>
+        </div>
+        <button id="btn-quick-run" class="btn btn-primary" onclick="triggerQuickRunAgain()">
+          ⚡ Run Again
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Trigger Pipeline Run</h2>
+          <span id="pipeline-status-badge" class="badge badge-secondary">IDLE</span>
+        </div>
+
+        <form id="pipeline-run-form">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Target Batch</label>
+              <select id="pipeline-batch-select" class="select-input">
+                <option value="Fall 2026">Fall 2026</option>
+                <option value="Summer 2026">Summer 2026</option>
+                <option value="Winter 2026">Winter 2026</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Startup Limit</label>
+              <input id="pipeline-limit" type="number" class="text-input" value="5" min="1" max="500" />
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Min Fit Score Threshold</label>
+              <input id="pipeline-min-score" type="number" class="text-input" value="50" min="0" max="100" />
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Max Concurrency</label>
+              <input id="pipeline-concurrency" type="number" class="text-input" value="5" min="1" max="20" />
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+              <input id="pipeline-dry-run" type="checkbox" />
+              <span>Dry Run (simulate discovery without LLM calls)</span>
+            </label>
+
+            <div style="display: flex; gap: 0.75rem;">
+              <button id="btn-cancel-pipeline" type="button" class="btn btn-danger" style="display: none;" onclick="cancelPipelineRun()">
+                ⏹ Cancel Run
+              </button>
+              <button id="btn-run-pipeline" type="submit" class="btn btn-primary">
+                🚀 Launch Pipeline Run
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Live Progress Status -->
+        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem;">
+            <span style="font-weight: 600;">Status:</span>
+            <span id="pipeline-progress-text" style="color: var(--text-secondary);">No pipeline run active</span>
+          </div>
+
+          <div class="progress-container">
+            <div id="pipeline-progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Last Run Summary Report Card -->
+      <div id="pipeline-last-report" class="card" style="display: none;">
+        <div class="card-header">
+          <h3 class="card-title">Completed Pipeline Execution Summary</h3>
+          <span id="report-duration" class="tag">0.0s</span>
+        </div>
+        <div class="metrics-grid" style="margin-bottom: 0;">
+          <div class="metric-card">
+            <div class="metric-label">Discovered</div>
+            <div id="report-discovered" class="metric-value">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Founders</div>
+            <div id="report-founders" class="metric-value">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Evaluated</div>
+            <div id="report-evaluated" class="metric-value">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Qualified</div>
+            <div id="report-qualified" class="metric-value">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Drafts Generated</div>
+            <div id="report-drafts" class="metric-value">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time Live Log Console (Phase 6) -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <h3 class="card-title">Live Pipeline & System Logs</h3>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <select id="log-level-filter" class="select-input" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem;" onchange="loadLogs()">
+              <option value="">All Levels</option>
+              <option value="INFO">INFO</option>
+              <option value="WARNING">WARNING</option>
+              <option value="ERROR">ERROR</option>
+            </select>
+            <button class="btn btn-sm btn-secondary" onclick="loadLogs()">Refresh Logs</button>
+          </div>
+        </div>
+        <div id="log-terminal" class="log-terminal">
+          <div class="log-terminal-placeholder">Awaiting log activity...</div>
+        </div>
+      </div>
+
+      <!-- Recent Run History Table (Phase 6) -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <h3 class="card-title">Recent Run History</h3>
+          <button class="btn btn-sm btn-secondary" onclick="loadPipelineHistory()">Refresh History</button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Session</th>
+                <th>Batch</th>
+                <th>Config</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Stats</th>
+                <th>Started At</th>
+              </tr>
+            </thead>
+            <tbody id="pipeline-history-body">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Loading run history...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Database Backups & Snapshots (Phase 6) -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">Database Backups & Snapshots</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Create compressed JSON snapshots of all tables and restore safely.</p>
+          </div>
+          <button id="btn-create-backup" class="btn btn-sm btn-secondary" onclick="createBackup()">
+            💾 Create Snapshot Now
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Filename</th>
+                <th>Created At</th>
+                <th>Size</th>
+                <th>Table Records</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="backups-table-body">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading backups...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/static/js/app.js?v=6"></script>
+</body>
+</html>

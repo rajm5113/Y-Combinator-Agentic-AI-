@@ -1,0 +1,70 @@
+{
+  "candidate_name": "Antigravity Engineer",
+  "headline": "Full-Stack AI Systems & Foundational Software Engineer | 0-to-1 Builder",
+  "email": "engineer@example.com",
+  "linkedin_url": "https://linkedin.com/in/founding-engineer-ai",
+  "portfolio_url": "https://github.com/founding-engineer-ai",
+  "target_roles": [
+    "Founding Engineer",
+    "Staff Software Engineer",
+    "Lead AI Systems Engineer",
+    "Full Stack Engineer"
+  ],
+  "skills": {
+    "languages": ["Python", "TypeScript", "JavaScript", "SQL", "Go"],
+    "frameworks": ["FastAPI", "Next.js", "React", "Node.js", "Pydantic"],
+    "ai_ml": [
+      "AI Agents",
+      "LangGraph / DSPy",
+      "OpenAI Function Calling",
+      "RAG Architecture",
+      "Prompt Compilation",
+      "Vector Databases (Qdrant, pgvector)"
+    ],
+    "cloud_devops": ["Docker", "PostgreSQL", "Redis", "AWS", "GitHub Actions", "CI/CD"],
+    "databases": ["PostgreSQL", "Redis", "SQLite", "Qdrant"]
+  },
+  "experience_highlights": [
+    "Designed and shipped multi-agent orchestration systems cutting LLM token overhead by 70% using deterministic state graphs.",
+    "Engineered production FastAPI backend with async PostgreSQL connection pooling serving 15k+ daily requests with sub-50ms latency.",
+    "Built real-time data ingestion pipelines harvesting 10k+ dynamic web profiles using structured extraction and resilient fallback loops.",
+    "Led technical architecture for 0-to-1 startup products from MVP design to production deployment."
+  ],
+  "featured_projects": [
+    {
+      "name": "Autonomous Market Intelligence Agent Fleet",
+      "description": "Multi-agent research system that continuously harvests company signals, evaluates investment fit, and delivers grounded intelligence dossiers.",
+      "tech_stack": ["Python", "FastAPI", "OpenAI SDK", "PostgreSQL", "Redis"],
+      "role": "Lead Architect & Developer",
+      "impact": "Automated 85% of founder research and eliminated manual outreach qualification."
+    },
+    {
+      "name": "High-Throughput Stateful Workflow Engine",
+      "description": "Event-driven workflow orchestrator with distributed Redis session state and PostgreSQL audit logging.",
+      "tech_stack": ["Python", "Redis", "PostgreSQL", "Docker"],
+      "role": "Core Systems Engineer",
+      "impact": "Zero state drift across distributed worker nodes with deterministic task replay."
+    }
+  ],
+  "target_startup_criteria": {
+    "preferred_stages": ["Pre-Seed", "Seed", "Series A"],
+    "preferred_team_size_max": 25,
+    "preferred_industries": [
+      "Developer Tools",
+      "AI / Machine Learning",
+      "B2B SaaS",
+      "Analytics & Data Infrastructure",
+      "Workflow Automation"
+    ]
+  },
+  "pitch_angles": {
+    "ai_agent_native": "Obsessed with building production-grade agentic systems that run deterministically with zero token bloat. Ready to own the core AI orchestration layer from Day 1.",
+    "rapid_zero_to_one": "Fast-moving generalist with strong backend systems and web UI capability who thrives in ambiguous early-stage environments.",
+    "infrastructure_scale": "Deep experience building bulletproof data models, caching layers, and high-throughput pipelines that scale cleanly as startup velocity increases."
+  },
+  "outreach_constraints": {
+    "max_linkedin_note_chars": 300,
+    "require_grounded_citations": true,
+    "tone": "Direct, technical, peer-to-peer, respectful, humble yet high conviction. No generic AI buzzwords or fluff."
+  }
+}

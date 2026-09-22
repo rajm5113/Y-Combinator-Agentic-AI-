@@ -1,0 +1,48 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "search_yc_directory",
+      "description": "Searches the Y Combinator startup directory by batch, industry, keywords, or hiring status to find relevant prospective startups.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "batch": {
+            "type": "string",
+            "description": "The YC batch name to filter by, e.g., 'Fall 2026', 'Summer 2026', 'Winter 2026'."
+          },
+          "industry": {
+            "type": "string",
+            "description": "Industry domain, e.g., 'B2B', 'Developer Tools', 'AI/ML', 'Analytics'."
+          },
+          "is_hiring": {
+            "type": "boolean",
+            "description": "Filter strictly for companies currently hiring."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of startups to return (1-50). Default is 20."
+          }
+        },
+        "required": ["batch"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "fetch_batch_startups",
+      "description": "Fetches the full startup roster for a specific YC batch from the directory index.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "batch": {
+            "type": "string",
+            "description": "The YC batch identifier, e.g., 'F26', 'S26', 'W26'."
+          }
+        },
+        "required": ["batch"]
+      }
+    }
+  }
+]

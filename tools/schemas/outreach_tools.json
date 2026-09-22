@@ -1,0 +1,62 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "check_never_contact_blacklist",
+      "description": "Checks whether a founder, LinkedIn URL, or company is on the permanent 'Never Contact Again' blacklist.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "founder_name": {
+            "type": "string",
+            "description": "Founder's full name to check."
+          },
+          "linkedin_url": {
+            "type": "string",
+            "description": "Founder's LinkedIn URL to check."
+          },
+          "company_name": {
+            "type": "string",
+            "description": "Startup name to check."
+          },
+          "website": {
+            "type": "string",
+            "description": "Company domain or website URL."
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "generate_grounded_messages",
+      "description": "Drafts personalized outreach messages across LinkedIn (<=300 chars), YC Job Note, and Cold Email strictly grounded in verified facts.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "founder_name": {
+            "type": "string",
+            "description": "Target founder name."
+          },
+          "company_name": {
+            "type": "string",
+            "description": "Target company name."
+          },
+          "verified_facts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Verified facts about the founder, product, or recent milestone to ground the message in."
+          },
+          "pitch_angle": {
+            "type": "string",
+            "description": "Candidate's tailored pitch angle."
+          }
+        },
+        "required": ["founder_name", "company_name", "verified_facts", "pitch_angle"]
+      }
+    }
+  }
+]

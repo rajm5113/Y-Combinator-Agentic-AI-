@@ -1,0 +1,11 @@
+{
+  "score": 88,
+  "fit_tier": "HIGH",
+  "should_contact": true,
+  "match_rationale": [
+    "Direct overlap between candidate AI Agent systems experience and Kailash Labs video reasoning models.",
+    "Early stage team size of 3 hiring Founding Engineers matches target role preferences.",
+    "Proven track record in high-throughput API design and latency reduction directly accelerates 0-to-1 build."
+  ],
+  "contribution_angle": "Architect the core distributed inference orchestration pipeline and eliminate token/latency bottlenecks from day one."
+}

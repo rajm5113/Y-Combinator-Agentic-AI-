@@ -1,0 +1,44 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "extract_company_profile",
+      "description": "Extracts detailed company metadata, founder profiles, bios, LinkedIn handles, and open jobs from the YC company page.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "company_slug": {
+            "type": "string",
+            "description": "The unique company slug used in the YC URL, e.g., 'stripe' or 'airbnb'."
+          }
+        },
+        "required": ["company_slug"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "verify_founder_socials",
+      "description": "Verifies and standardizes founder social profiles, prioritizing direct LinkedIn URLs.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "founder_name": {
+            "type": "string",
+            "description": "Full name of the founder."
+          },
+          "linkedin_url": {
+            "type": "string",
+            "description": "Extracted LinkedIn profile URL."
+          },
+          "company_name": {
+            "type": "string",
+            "description": "Company name for context."
+          }
+        },
+        "required": ["founder_name", "company_name"]
+      }
+    }
+  }
+]

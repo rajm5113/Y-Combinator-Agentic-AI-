@@ -1,0 +1,41 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "evaluate_startup_fit",
+      "description": "Compares the candidate profile against a startup's mission, stack, and jobs to generate an objective 0-100 fit score, classification tier, and specific contribution angles.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "company_name": {
+            "type": "string",
+            "description": "The name of the startup."
+          },
+          "one_liner": {
+            "type": "string",
+            "description": "Company one-line elevator pitch."
+          },
+          "description": {
+            "type": "string",
+            "description": "Full description of company product and mission."
+          },
+          "industries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of company industries and tags."
+          },
+          "founder_backgrounds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Summaries of founder backgrounds and bios."
+          }
+        },
+        "required": ["company_name", "one_liner"]
+      }
+    }
+  }
+]
