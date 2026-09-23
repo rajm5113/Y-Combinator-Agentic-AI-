@@ -8,6 +8,7 @@ on routing or coordination. LLM calls happen exclusively within specialist agent
 """
 
 import asyncio
+import json
 import logging
 import time
 import uuid
@@ -22,6 +23,7 @@ from agents.fit_agent import FitAgent
 from agents.founder_agent import FounderAgent
 from agents.message_agent import MessageAgent
 from config.settings import settings
+from location_utils import extract_job_locations, locations_match
 from db.memory import MemoryManager, memory_manager as default_memory_manager
 from db.storage import StorageEngine, storage_engine as default_storage_engine
 
@@ -53,6 +55,22 @@ class PipelineConfig(BaseModel):
     min_fit_score: int = Field(
         default=settings.pipeline_default_min_score, ge=0, le=100,
         description="Minimum fit score required to pass qualification gate",
+    )
+    target_country: str = Field(
+        default_factory=lambda: settings.target_country,
+        description="Country in which the candidate wants current offices or active jobs.",
+    )
+    target_city: str = Field(
+        default_factory=lambda: settings.target_city,
+        description="Optional city restriction inside the target country.",
+    )
+    target_location_mode: str = Field(
+        default_factory=lambda: settings.target_location_mode,
+        description="Location evidence to accept: office_or_job, office_only, or job_only.",
+    )
+    target_location_unknown_policy: str = Field(
+        default_factory=lambda: settings.target_location_unknown_policy,
+        description="How to handle records with no reliable location evidence.",
     )
     max_concurrency: int = Field(
         default=settings.pipeline_max_concurrency, ge=1, le=20,
@@ -91,6 +109,9 @@ class PipelineReport(BaseModel):
     total_startups_discovered: int = 0
     total_founders_extracted: int = 0
     total_fit_evaluated: int = 0
+    total_location_matched: int = 0
+    total_location_filtered: int = 0
+    total_location_unknown: int = 0
     total_qualified: int = 0
     total_drafts_generated: int = 0
     total_duration_seconds: float = 0.0
@@ -317,6 +338,61 @@ class MasterOrchestrator:
         })
         return all_startup_ids
 
+    def _filter_by_target_location(self, startup_ids: List[int], report: PipelineReport) -> List[int]:
+        """Deterministic geography gate: only pass India/city-matching startups to Fit."""
+        matched: List[int] = []
+        filtered = 0
+        unknown = 0
+
+        for sid in startup_ids:
+            startup = self.storage.get_startup_by_id(sid)
+            if not startup:
+                filtered += 1
+                continue
+
+            try:
+                office_locations = json.loads(startup.get("office_locations") or "[]")
+            except Exception:
+                office_locations = []
+
+            try:
+                jobs = json.loads(startup.get("jobs_data") or "[]")
+            except Exception:
+                jobs = []
+
+            job_locations = extract_job_locations(jobs)
+            if self.config.target_location_mode == "office_only":
+                job_locations = []
+            elif self.config.target_location_mode == "job_only":
+                office_locations = []
+
+            match = locations_match(
+                office_locations=office_locations,
+                job_locations=job_locations,
+                target_country=self.config.target_country,
+                target_city=self.config.target_city,
+            )
+
+            if match == "MATCH":
+                matched.append(sid)
+            elif match == "UNKNOWN" and self.config.target_location_unknown_policy == "include":
+                matched.append(sid)
+            elif match == "UNKNOWN":
+                unknown += 1
+            else:
+                filtered += 1
+
+        report.total_location_matched = len(matched)
+        report.total_location_filtered = filtered
+        report.total_location_unknown = unknown
+
+        logger.info(
+            f"[Location Gate] target={self.config.target_country or 'Any'}"
+            f"/{self.config.target_city or 'All cities'} "
+            f"matched={len(matched)} filtered={filtered} unknown={unknown}"
+        )
+        return matched
+
     async def _run_stage_fit(
         self,
         startup_ids: List[int],
@@ -457,8 +533,9 @@ class MasterOrchestrator:
 
         logger.info(
             f"🚀 [Pipeline] Starting run session={self.session_id} | "
-            f"batches={self.config.batches} | min_score={self.config.min_fit_score} | "
-            f"concurrency={self.config.max_concurrency}"
+            f"batches={self.config.batches} | target={self.config.target_country or 'Any'}"
+            f"/{self.config.target_city or 'All cities'} | "
+            f"min_score={self.config.min_fit_score} | concurrency={self.config.max_concurrency}"
         )
 
         try:
@@ -468,6 +545,9 @@ class MasterOrchestrator:
                     session_id=self.session_id,
                     batch=self.config.batches[0] if self.config.batches else "",
                     industry=self.config.industries[0] if self.config.industries else None,
+                    target_country=self.config.target_country,
+                    target_city=self.config.target_city,
+                    target_location_mode=self.config.target_location_mode,
                     startup_limit=self.config.limit or 0,
                     min_fit_score=self.config.min_fit_score,
                     max_concurrency=self.config.max_concurrency,
@@ -544,8 +624,10 @@ class MasterOrchestrator:
                 report.success = False
                 return report
 
+            location_scoped_ids = self._filter_by_target_location(startup_ids, report)
+
             if PipelineStage.FIT not in self.config.skip_stages:
-                await self._run_stage_fit(startup_ids, report)
+                await self._run_stage_fit(location_scoped_ids, report)
             else:
                 logger.info("[Pipeline] Skipping Fit evaluation stage.")
 
@@ -554,10 +636,10 @@ class MasterOrchestrator:
                 min_score=self.config.min_fit_score
             )
             # Scope to startups evaluated in the current run if startup_ids is defined
-            if startup_ids:
-                qualified_ids = [sid for sid in all_qualified_ids if sid in startup_ids]
+            if location_scoped_ids:
+                qualified_ids = [sid for sid in all_qualified_ids if sid in location_scoped_ids]
             else:
-                qualified_ids = all_qualified_ids
+                qualified_ids = []
 
             report.total_qualified = len(qualified_ids)
             logger.info(
@@ -612,6 +694,9 @@ class MasterOrchestrator:
                 "discovered": report.total_startups_discovered,
                 "founders": report.total_founders_extracted,
                 "fit_evaluated": report.total_fit_evaluated,
+                "location_matched": report.total_location_matched,
+                "location_filtered": report.total_location_filtered,
+                "location_unknown": report.total_location_unknown,
                 "fit_failed": fit_stage.items_failed if fit_stage else 0,
                 "founder_failed": founder_stage.items_failed if founder_stage else 0,
                 "message_failed": message_stage.items_failed if message_stage else 0,
@@ -646,6 +731,7 @@ class MasterOrchestrator:
                 f"🏁 [Pipeline Complete] status={status} success={report.success} | "
                 f"duration={report.total_duration_seconds:.2f}s | "
                 f"discovered={report.total_startups_discovered} | "
+                f"location_matched={report.total_location_matched} | "
                 f"qualified={report.total_qualified} | "
                 f"drafts={report.total_drafts_generated}"
             )
