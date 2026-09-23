@@ -91,11 +91,8 @@ class FitAgent(BaseAgent):
             "You are a talent-fit evaluation engine for startup outreach. "
             "Evaluate how strongly a startup aligns with this specific candidate's interests, "
             "demonstrated capabilities, current experience, target roles, and preferred problem spaces. "
-            "This is a candidate-to-startup fit score, not a judgement of whether the startup is good.
-
-"
-            "SCORING FRAMEWORK (100 points total):
-"
+            "This is a candidate-to-startup fit score, not a judgement of whether the startup is good.\n\n"
+            "SCORING FRAMEWORK (100 points total):\n"
             + "\n".join(dimension_lines)
             + f"\nThresholds: HIGH >= {thresholds.get('high', 75)}, "
               f"MEDIUM >= {thresholds.get('medium', 50)}, "
