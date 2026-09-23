@@ -48,6 +48,12 @@ class StorageEngine:
                     is_hiring INTEGER DEFAULT 0,
                     yc_url TEXT,
                     jobs_data TEXT DEFAULT '[]',
+                    primary_location_country TEXT,
+                    primary_location_state TEXT,
+                    primary_location_city TEXT,
+                    office_locations TEXT DEFAULT '[]',
+                    location_source TEXT,
+                    location_confidence REAL DEFAULT 0.0,
                     discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
@@ -129,6 +135,9 @@ class StorageEngine:
                     session_id TEXT UNIQUE NOT NULL,
                     batch TEXT NOT NULL,
                     industry TEXT,
+                    target_country TEXT DEFAULT 'India',
+                    target_city TEXT DEFAULT '',
+                    target_location_mode TEXT DEFAULT 'office_or_job',
                     startup_limit INTEGER NOT NULL DEFAULT 5,
                     min_fit_score INTEGER NOT NULL DEFAULT 50,
                     max_concurrency INTEGER NOT NULL DEFAULT 5,
@@ -172,6 +181,12 @@ class StorageEngine:
                     is_hiring INTEGER DEFAULT 0,
                     yc_url TEXT,
                     jobs_data TEXT DEFAULT '[]',
+                    primary_location_country TEXT,
+                    primary_location_state TEXT,
+                    primary_location_city TEXT,
+                    office_locations TEXT DEFAULT '[]',
+                    location_source TEXT,
+                    location_confidence REAL DEFAULT 0.0,
                     discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
@@ -253,6 +268,9 @@ class StorageEngine:
                     session_id VARCHAR(64) UNIQUE NOT NULL,
                     batch VARCHAR(64) NOT NULL,
                     industry VARCHAR(128),
+                    target_country VARCHAR(64) DEFAULT 'India',
+                    target_city VARCHAR(128) DEFAULT '',
+                    target_location_mode VARCHAR(32) DEFAULT 'office_or_job',
                     startup_limit INTEGER NOT NULL DEFAULT 5,
                     min_fit_score INTEGER NOT NULL DEFAULT 50,
                     max_concurrency INTEGER NOT NULL DEFAULT 5,
@@ -275,6 +293,31 @@ class StorageEngine:
                 CREATE INDEX IF NOT EXISTS idx_pipeline_runs_started ON pipeline_runs(started_at);
                 """)
 
+    # Backward-compatible schema upgrades for already-running SQLite/PostgreSQL databases.
+    with get_db_connection() as conn:
+        for col, ddl in (
+            ("primary_location_country", "TEXT"),
+            ("primary_location_state", "TEXT"),
+            ("primary_location_city", "TEXT"),
+            ("office_locations", "TEXT DEFAULT '[]'"),
+            ("location_source", "TEXT"),
+            ("location_confidence", "REAL DEFAULT 0.0"),
+        ):
+            try:
+                conn.execute(f"ALTER TABLE startups ADD COLUMN {col} {ddl}")
+            except Exception:
+                pass
+
+        for col, ddl in (
+            ("target_country", "TEXT DEFAULT 'India'"),
+            ("target_city", "TEXT DEFAULT ''"),
+            ("target_location_mode", "TEXT DEFAULT 'office_or_job'"),
+        ):
+            try:
+                conn.execute(f"ALTER TABLE pipeline_runs ADD COLUMN {col} {ddl}")
+            except Exception:
+                pass
+
     # --- Startup & Founder Operations ---
 
     @staticmethod
@@ -282,13 +325,16 @@ class StorageEngine:
         """Inserts or updates a startup by slug."""
         tags_json = json.dumps(startup.tags)
         jobs_json = json.dumps(startup.jobs_data) if getattr(startup, "jobs_data", None) else "[]"
+        office_locations_json = json.dumps(getattr(startup, "office_locations", None) or [])
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO startups (
                     name, slug, batch, website, one_liner, long_description,
-                    team_size, industry, subindustry, tags, status, is_hiring, yc_url, jobs_data, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    team_size, industry, subindustry, tags, status, is_hiring, yc_url, jobs_data,
+                    primary_location_country, primary_location_state, primary_location_city,
+                    office_locations, location_source, location_confidence, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(slug) DO UPDATE SET
                     name=excluded.name,
                     batch=excluded.batch,
@@ -303,12 +349,20 @@ class StorageEngine:
                     is_hiring=excluded.is_hiring,
                     yc_url=COALESCE(excluded.yc_url, startups.yc_url),
                     jobs_data=CASE WHEN excluded.jobs_data != '[]' THEN excluded.jobs_data ELSE startups.jobs_data END,
+                    primary_location_country=COALESCE(excluded.primary_location_country, startups.primary_location_country),
+                    primary_location_state=COALESCE(excluded.primary_location_state, startups.primary_location_state),
+                    primary_location_city=COALESCE(excluded.primary_location_city, startups.primary_location_city),
+                    office_locations=CASE WHEN excluded.office_locations != '[]' THEN excluded.office_locations ELSE startups.office_locations END,
+                    location_source=COALESCE(excluded.location_source, startups.location_source),
+                    location_confidence=CASE WHEN excluded.location_confidence > 0 THEN excluded.location_confidence ELSE startups.location_confidence END,
                     updated_at=CURRENT_TIMESTAMP
             """, (
                 startup.name, startup.slug, startup.batch, startup.website,
                 startup.one_liner, startup.long_description, startup.team_size,
                 startup.industry, startup.subindustry, tags_json, startup.status,
-                1 if startup.is_hiring else 0, startup.yc_url, jobs_json
+                1 if startup.is_hiring else 0, startup.yc_url, jobs_json,
+                startup.primary_location_country, startup.primary_location_state, startup.primary_location_city,
+                office_locations_json, startup.location_source, startup.location_confidence,
             ))
             cursor.execute("SELECT id FROM startups WHERE slug = ?", (startup.slug,))
             row = cursor.fetchone()
@@ -1172,6 +1226,9 @@ class StorageEngine:
         session_id: str,
         batch: str,
         industry: Optional[str] = None,
+        target_country: str = "India",
+        target_city: str = "",
+        target_location_mode: str = "office_or_job",
         startup_limit: int = 5,
         min_fit_score: int = 50,
         max_concurrency: int = 5,
@@ -1180,10 +1237,10 @@ class StorageEngine:
         """Records the initialization of a pipeline run in the database."""
         query = """
             INSERT INTO pipeline_runs (
-                session_id, batch, industry, startup_limit, min_fit_score,
-                max_concurrency, dry_run, status, progress_message, started_at
+                session_id, batch, industry, target_country, target_city, target_location_mode,
+                startup_limit, min_fit_score, max_concurrency, dry_run, status, progress_message, started_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'running', 'Starting pipeline...', CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'running', 'Starting pipeline...', CURRENT_TIMESTAMP)
         """
         with get_db_connection() as conn:
             cur = conn.cursor()
@@ -1193,6 +1250,9 @@ class StorageEngine:
                     session_id,
                     batch,
                     industry,
+                    target_country,
+                    target_city,
+                    target_location_mode,
                     startup_limit,
                     min_fit_score,
                     max_concurrency,
@@ -1248,7 +1308,8 @@ class StorageEngine:
     def get_last_pipeline_run_config() -> Optional[Dict[str, Any]]:
         """Retrieves parameters of the most recent pipeline run for the 'Run Again' quick-trigger."""
         query = """
-            SELECT batch, industry, startup_limit, min_fit_score, max_concurrency, dry_run, status, started_at
+            SELECT batch, industry, target_country, target_city, target_location_mode,
+                   startup_limit, min_fit_score, max_concurrency, dry_run, status, started_at
             FROM pipeline_runs
             ORDER BY started_at DESC
             LIMIT 1
@@ -1269,8 +1330,8 @@ class StorageEngine:
     def get_pipeline_run_history(limit: int = 20) -> List[Dict[str, Any]]:
         """Returns recent pipeline execution history sorted by started_at DESC."""
         query = """
-            SELECT id, session_id, batch, industry, startup_limit, min_fit_score,
-                   max_concurrency, dry_run, status, progress_message,
+            SELECT id, session_id, batch, industry, target_country, target_city, target_location_mode,
+                   startup_limit, min_fit_score, max_concurrency, dry_run, status, progress_message,
                    started_at, completed_at, duration_seconds, stats_json, error_summary
             FROM pipeline_runs
             ORDER BY started_at DESC
