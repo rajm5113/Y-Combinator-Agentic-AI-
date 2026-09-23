@@ -16,9 +16,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from config.health import health_checker
 from config.logging_buffer import global_log_buffer
@@ -53,6 +54,31 @@ from dashboard.api_models import (
 
 logger = logging.getLogger("dashboard")
 
+basic_auth = HTTPBasic(auto_error=False)
+
+async def require_dashboard_auth(
+    request: Request,
+    credentials: Optional[HTTPBasicCredentials] = Depends(basic_auth),
+):
+    """Protect API/state-changing endpoints when dashboard auth is enabled."""
+    if not settings.dashboard_auth_enabled or not request.url.path.startswith("/api/"):
+        return
+
+    valid = (
+        credentials is not None
+        and secrets.compare_digest(credentials.username, settings.dashboard_auth_username)
+        and secrets.compare_digest(credentials.password, settings.dashboard_auth_password)
+        and bool(settings.dashboard_auth_username)
+        and bool(settings.dashboard_auth_password)
+    )
+    if not valid:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
+
 # --- Background pipeline state (module-level, single-user tool) ---
 _pipeline_lock = asyncio.Lock()
 _current_orchestrator: Optional[MasterOrchestrator] = None
@@ -79,6 +105,7 @@ app = FastAPI(
     title="YC Outreach Dashboard",
     version="1.0.0",
     lifespan=lifespan,
+    dependencies=[Depends(require_dashboard_auth)],
 )
 
 # Serve static frontend files
