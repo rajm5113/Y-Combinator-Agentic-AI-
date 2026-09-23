@@ -11,6 +11,7 @@ class FunnelStats(BaseModel):
     total_startups: int = 0
     total_founders: int = 0
     total_evaluated: int = 0
+    fit_pending: int = 0
     fit_high: int = 0
     fit_medium: int = 0
     fit_low: int = 0
