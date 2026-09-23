@@ -27,6 +27,12 @@ class StartupCreate(BaseModel):
     is_hiring: bool = Field(default=False)
     yc_url: Optional[str] = None
     jobs_data: List[Dict[str, Any]] = Field(default_factory=list)
+    primary_location_country: Optional[str] = None
+    primary_location_state: Optional[str] = None
+    primary_location_city: Optional[str] = None
+    office_locations: List[Dict[str, Any]] = Field(default_factory=list)
+    location_source: Optional[str] = None
+    location_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
 class Startup(StartupCreate):
