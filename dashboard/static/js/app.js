@@ -1074,6 +1074,7 @@ async function checkPipelineStatus() {
       setText('report-discovered', rep.total_startups_discovered || 0);
       setText('report-founders', rep.total_founders_extracted || 0);
       setText('report-evaluated', rep.total_fit_evaluated || 0);
+      setText('report-location-matched', rep.total_location_matched || 0);
       setText('report-qualified', rep.total_qualified || 0);
       setText('report-drafts', rep.total_drafts_generated || 0);
     }
