@@ -276,17 +276,18 @@ class MasterOrchestrator:
                 if st_id:
                     existing = self.storage.get_founders_by_startup_id(st_id)
                     startup_record = self.storage.get_startup_by_id(st_id)
-                    has_location = bool(
+                    location_verified = bool(
                         startup_record
+                        and startup_record.get("employment_location_verified")
                         and (
-                            startup_record.get("primary_location_country")
-                            or startup_record.get("office_locations")
-                            or startup_record.get("jobs_data") not in (None, "", "[]", [])
+                            startup_record.get("office_locations")
+                            or startup_record.get("job_locations")
                         )
                     )
-                    # Re-fetch existing companies when location evidence has not
-                    # been harvested yet; geography is required before Fit.
-                    if existing and has_location:
+                    # Re-fetch existing companies whose old record only contains
+                    # the YC profile location; that field is not sufficient for
+                    # India employment targeting.
+                    if existing and location_verified:
                         continue
             slugs_to_process.append(slug)
 
