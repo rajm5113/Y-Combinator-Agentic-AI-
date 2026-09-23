@@ -397,7 +397,10 @@ class StorageEngine:
                     yc_profile_locations=CASE WHEN excluded.yc_profile_locations != '[]' THEN excluded.yc_profile_locations ELSE startups.yc_profile_locations END,
                     job_locations=CASE WHEN excluded.job_locations != '[]' THEN excluded.job_locations ELSE startups.job_locations END,
                     location_evidence=CASE WHEN excluded.location_evidence != '[]' THEN excluded.location_evidence ELSE startups.location_evidence END,
-                    employment_location_verified=CASE WHEN excluded.employment_location_verified THEN 1 ELSE startups.employment_location_verified END,
+                    employment_location_verified=CASE
+                        WHEN excluded.employment_location_verified THEN excluded.employment_location_verified
+                        ELSE startups.employment_location_verified
+                    END,
                     updated_at=CURRENT_TIMESTAMP
             """, (
                 startup.name, startup.slug, startup.batch, startup.website,
