@@ -91,7 +91,7 @@ class OutreachRecord(BaseModel):
     id: Optional[int] = None
     startup_id: int
     founder_id: int
-    status: Literal["draft", "approved", "sent", "replied", "rejected", "blacklisted"] = "draft"
+    status: Literal["discovered", "draft", "approved", "sent", "replied", "rejected", "blacklisted"] = "discovered"
     active_channel: Literal["linkedin", "yc_job", "email"] = "linkedin"
     selected_message: Optional[str] = None
     notes: Optional[str] = None
