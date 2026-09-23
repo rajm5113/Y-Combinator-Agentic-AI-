@@ -549,6 +549,16 @@ function renderLeadDetail(lead) {
             <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem;">Tags & Industry</div>
             <div>${tagsHtml || '<span style="color: var(--text-muted); font-size: 0.8rem;">None</span>'}</div>
           </div>
+          <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem;">Employment Location</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+              <strong>${lead.employment_location_verified ? 'Verified employment signal' : 'Not yet verified'}</strong>
+              <div>Current office: ${escapeHtml((lead.office_locations || []).map(l => [l.city, l.country].filter(Boolean).join(', ')).filter(Boolean).join(' • ') || 'Not found')}</div>
+              <div>Active jobs: ${escapeHtml((lead.job_locations || []).map(l => [l.city, l.country].filter(Boolean).join(', ')).filter(Boolean).join(' • ') || 'Not found')}</div>
+              <div>YC profile location: ${escapeHtml((lead.yc_profile_locations || []).map(l => [l.city, l.country].filter(Boolean).join(', ')).filter(Boolean).join(' • ') || 'Not listed')}</div>
+            </div>
+          </div>
+
 
           <div>
             <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem;">Open Jobs (${(lead.jobs_data || []).length})</div>
@@ -583,6 +593,17 @@ function renderLeadDetail(lead) {
             <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.25rem;">
               ${rationaleHtml}
             </ul>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem;">Location Evidence</div>
+            ${(lead.location_evidence || []).slice(0, 5).map(ev => `
+              <div style="font-size: 0.78rem; color: var(--text-secondary); padding: 0.3rem 0; border-bottom: 1px solid var(--border-subtle);">
+                <strong>${escapeHtml(ev.kind || ev.source || 'Source')}</strong>
+                ${ev.url ? ` — <a href="${escapeHtml(ev.url)}" target="_blank" style="color: var(--accent-primary);">source ↗</a>` : ''}
+                ${ev.snippet ? `<div style="color: var(--text-muted); margin-top: 0.2rem;">${escapeHtml(ev.snippet)}</div>` : ''}
+              </div>
+            `).join('') || '<span style="color: var(--text-muted); font-size: 0.8rem;">No current office evidence captured yet.</span>'}
           </div>
 
           <div>
