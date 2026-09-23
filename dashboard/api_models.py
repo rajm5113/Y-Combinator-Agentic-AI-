@@ -43,7 +43,7 @@ class LeadSummary(BaseModel):
     linkedin_url: Optional[str] = None
     fit_score: int = 0
     fit_tier: str = "UNKNOWN"
-    outreach_status: str = "draft"
+    outreach_status: str = "discovered"
     active_channel: str = "linkedin"
     has_drafts: bool = False
 
@@ -86,7 +86,7 @@ class LeadDetail(BaseModel):
     cold_email_body: Optional[str] = None
 
     # Outreach state
-    outreach_status: str = "draft"
+    outreach_status: str = "discovered"
     active_channel: str = "linkedin"
     selected_message: Optional[str] = None
     notes: Optional[str] = None
@@ -105,7 +105,7 @@ class LeadListResponse(BaseModel):
 class UpdateLeadRequest(BaseModel):
     """Payload for updating a lead's outreach state or message edits."""
     status: Optional[Literal[
-        "draft", "review", "approved", "sent", "replied", "rejected", "blacklisted"
+        "discovered", "draft", "review", "approved", "sent", "replied", "rejected", "blacklisted"
     ]] = None
     active_channel: Optional[Literal["linkedin", "yc_job", "email"]] = None
     selected_message: Optional[str] = None
