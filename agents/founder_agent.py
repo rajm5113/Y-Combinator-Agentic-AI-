@@ -19,6 +19,7 @@ from agents.http_client import ResilientHTTPClient
 from config.llm_client import ModelTier, ResilientLLMClient, llm_client as default_llm_client
 from config.settings import settings
 from location_utils import extract_company_locations, extract_job_locations, primary_location
+from official_location import parse_official_site_locations
 from db.memory import MemoryManager, memory_manager as default_memory_manager
 from db.models import FounderCreate, StartupCreate
 from db.storage import StorageEngine, storage_engine as default_storage_engine
@@ -224,6 +225,66 @@ class FounderAgent(BaseAgent):
             self.http_client = ResilientHTTPClient()
         return self.http_client
 
+    async def _discover_official_locations(
+        self,
+        website_url: Optional[str],
+        http: ResilientHTTPClient,
+        force_refresh: bool = False,
+    ) -> Dict[str, Any]:
+        """Discover current office evidence from a company's own website."""
+        if not website_url:
+            return {"locations": [], "evidence": [], "checked": False}
+
+        cache_key = {"website": website_url}
+        if not force_refresh:
+            cached = self.memory.get_cached_tool_result("discover_official_locations", cache_key)
+            if cached:
+                return cached
+
+        try:
+            home = await http.get(website_url)
+            if not home.success or not isinstance(home.data, str):
+                return {"locations": [], "evidence": [], "checked": True}
+
+            locations, evidence, links = parse_official_site_locations(home.data, home.url)
+            pages_fetched = 1
+            for url, _label in links[:3]:
+                if url == home.url:
+                    continue
+                page = await http.get(url)
+                if not page.success or not isinstance(page.data, str):
+                    continue
+                more_locations, more_evidence, _ = parse_official_site_locations(page.data, page.url)
+                locations.extend(more_locations)
+                evidence.extend(more_evidence)
+                pages_fetched += 1
+
+            seen = set()
+            unique_locations = []
+            for loc in locations:
+                key = (loc.get("city"), loc.get("state"), loc.get("country"))
+                if key in seen:
+                    continue
+                seen.add(key)
+                unique_locations.append(loc)
+
+            result = {
+                "locations": unique_locations,
+                "evidence": evidence[:20],
+                "checked": True,
+                "pages_fetched": pages_fetched,
+            }
+            self.memory.cache_tool_result(
+                "discover_official_locations",
+                cache_key,
+                result,
+                ttl=86400,
+            )
+            return result
+        except Exception as exc:
+            logger.debug(f"Official location enrichment failed for {website_url}: {exc}")
+            return {"locations": [], "evidence": [], "checked": True}
+
     async def execute(self, context: Dict[str, Any]) -> AgentResult:
         """Main founder extraction execution.
 
@@ -311,14 +372,40 @@ class FounderAgent(BaseAgent):
             if not company_info:
                 continue
 
-            # Resolve current office/company locations and job locations.
-            office_locations = extract_company_locations(company_info)
+            # Keep YC's published profile location separate from current
+            # employment evidence. Never infer company office from founder location.
+            yc_profile_locations = extract_company_locations(company_info)
             raw_jobs = company_info.get("jobs", []) or []
             job_locations = extract_job_locations(raw_jobs)
-            primary = primary_location(office_locations or job_locations)
-            location_source = "yc_company_page" if office_locations else (
-                "yc_job_listing" if job_locations else None
+
+            official_location_result = await self._discover_official_locations(
+                company_info.get("website"),
+                http,
+                force_refresh=force_refresh,
             )
+            office_locations = official_location_result.get("locations", [])
+            location_evidence = list(official_location_result.get("evidence", []))
+
+            effective_locations = office_locations or job_locations
+            primary = primary_location(
+                effective_locations,
+                preferred_country=settings.target_country,
+                preferred_city=settings.target_city,
+            )
+            employment_location_verified = bool(office_locations or job_locations)
+
+            if office_locations:
+                location_source = "official_company_website"
+                location_confidence = 0.90
+            elif job_locations:
+                location_source = "yc_job_listing"
+                location_confidence = 0.85
+            elif yc_profile_locations:
+                location_source = "yc_profile_location"
+                location_confidence = 0.35
+            else:
+                location_source = None
+                location_confidence = 0.0
 
             # Resolve or initialize startup in database
             startup_record = self.storage.get_startup_by_slug(slug)
@@ -336,9 +423,13 @@ class FounderAgent(BaseAgent):
                     primary_location_country=primary["country"],
                     primary_location_state=primary["state"],
                     primary_location_city=primary["city"],
+                    yc_profile_locations=yc_profile_locations,
                     office_locations=office_locations,
+                    job_locations=job_locations,
+                    location_evidence=location_evidence,
+                    employment_location_verified=employment_location_verified,
                     location_source=location_source,
-                    location_confidence=0.9 if office_locations else (0.7 if job_locations else 0.0),
+                    location_confidence=location_confidence,
                 )
                 startup_id = self.storage.upsert_startup(startup_create)
                 startup_record = self.storage.get_startup_by_slug(slug)
@@ -429,12 +520,13 @@ class FounderAgent(BaseAgent):
                     primary_location_country=primary["country"] or startup_record.get("primary_location_country"),
                     primary_location_state=primary["state"] or startup_record.get("primary_location_state"),
                     primary_location_city=primary["city"] or startup_record.get("primary_location_city"),
-                    office_locations=office_locations or (
-                        json.loads(startup_record.get("office_locations") or "[]")
-                        if startup_record.get("office_locations") else []
-                    ),
+                    yc_profile_locations=yc_profile_locations or startup_record.get("yc_profile_locations") or [],
+                    office_locations=office_locations or startup_record.get("office_locations") or [],
+                    job_locations=job_locations or startup_record.get("job_locations") or [],
+                    location_evidence=location_evidence or startup_record.get("location_evidence") or [],
+                    employment_location_verified=employment_location_verified or bool(startup_record.get("employment_location_verified")),
                     location_source=location_source or startup_record.get("location_source"),
-                    location_confidence=0.9 if office_locations else (0.7 if job_locations else float(startup_record.get("location_confidence") or 0.0)),
+                    location_confidence=location_confidence or float(startup_record.get("location_confidence") or 0.0),
                 )
                 self.storage.upsert_startup(startup_update)
 

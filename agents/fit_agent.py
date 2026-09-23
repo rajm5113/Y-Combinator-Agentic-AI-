@@ -144,6 +144,10 @@ class FitAgent(BaseAgent):
             f"- Team Size: {startup.get('team_size')}\n"
             f"- Hiring Status: {'Hiring' if startup.get('is_hiring') else 'Not explicitly hiring'}\n"
             f"- Jobs: {json.dumps(startup.get('jobs_data', []))}\n"
+            f"- Current office locations: {json.dumps(startup.get('office_locations', []))}\n"
+            f"- Active job locations: {json.dumps(startup.get('job_locations', []))}\n"
+            f"- YC profile location (reference only, not proof of employment): {json.dumps(startup.get('yc_profile_locations', []))}\n"
+            f"- Employment location verified: {bool(startup.get('employment_location_verified'))}\n"
             f"- Founders:\n" + "\n".join(founder_summaries or ["No founder details"])
         )
 

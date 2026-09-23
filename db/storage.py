@@ -54,6 +54,10 @@ class StorageEngine:
                     office_locations TEXT DEFAULT '[]',
                     location_source TEXT,
                     location_confidence REAL DEFAULT 0.0,
+                    yc_profile_locations TEXT DEFAULT '[]',
+                    job_locations TEXT DEFAULT '[]',
+                    location_evidence TEXT DEFAULT '[]',
+                    employment_location_verified INTEGER DEFAULT 0,
                     discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
@@ -187,6 +191,10 @@ class StorageEngine:
                     office_locations TEXT DEFAULT '[]',
                     location_source TEXT,
                     location_confidence REAL DEFAULT 0.0,
+                    yc_profile_locations TEXT DEFAULT '[]',
+                    job_locations TEXT DEFAULT '[]',
+                    location_evidence TEXT DEFAULT '[]',
+                    employment_location_verified BOOLEAN DEFAULT 0,
                     discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
@@ -302,6 +310,10 @@ class StorageEngine:
             ("office_locations", "TEXT DEFAULT '[]'"),
             ("location_source", "TEXT"),
             ("location_confidence", "REAL DEFAULT 0.0"),
+            ("yc_profile_locations", "TEXT DEFAULT '[]'"),
+            ("job_locations", "TEXT DEFAULT '[]'"),
+            ("location_evidence", "TEXT DEFAULT '[]'"),
+            ("employment_location_verified", "INTEGER DEFAULT 0"),
         ):
             try:
                 conn.execute(f"ALTER TABLE startups ADD COLUMN {col} {ddl}")
@@ -333,8 +345,10 @@ class StorageEngine:
                     name, slug, batch, website, one_liner, long_description,
                     team_size, industry, subindustry, tags, status, is_hiring, yc_url, jobs_data,
                     primary_location_country, primary_location_state, primary_location_city,
-                    office_locations, location_source, location_confidence, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    office_locations, location_source, location_confidence,
+                    yc_profile_locations, job_locations, location_evidence,
+                    employment_location_verified, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(slug) DO UPDATE SET
                     name=excluded.name,
                     batch=excluded.batch,
@@ -355,6 +369,10 @@ class StorageEngine:
                     office_locations=CASE WHEN excluded.office_locations != '[]' THEN excluded.office_locations ELSE startups.office_locations END,
                     location_source=COALESCE(excluded.location_source, startups.location_source),
                     location_confidence=CASE WHEN excluded.location_confidence > 0 THEN excluded.location_confidence ELSE startups.location_confidence END,
+                    yc_profile_locations=CASE WHEN excluded.yc_profile_locations != '[]' THEN excluded.yc_profile_locations ELSE startups.yc_profile_locations END,
+                    job_locations=CASE WHEN excluded.job_locations != '[]' THEN excluded.job_locations ELSE startups.job_locations END,
+                    location_evidence=CASE WHEN excluded.location_evidence != '[]' THEN excluded.location_evidence ELSE startups.location_evidence END,
+                    employment_location_verified=CASE WHEN excluded.employment_location_verified THEN 1 ELSE startups.employment_location_verified END,
                     updated_at=CURRENT_TIMESTAMP
             """, (
                 startup.name, startup.slug, startup.batch, startup.website,
@@ -363,6 +381,10 @@ class StorageEngine:
                 1 if startup.is_hiring else 0, startup.yc_url, jobs_json,
                 startup.primary_location_country, startup.primary_location_state, startup.primary_location_city,
                 office_locations_json, startup.location_source, startup.location_confidence,
+                json.dumps(getattr(startup, "yc_profile_locations", None) or []),
+                json.dumps(getattr(startup, "job_locations", None) or []),
+                json.dumps(getattr(startup, "location_evidence", None) or []),
+                bool(getattr(startup, "employment_location_verified", False)),
             ))
             cursor.execute("SELECT id FROM startups WHERE slug = ?", (startup.slug,))
             row = cursor.fetchone()
@@ -388,6 +410,12 @@ class StorageEngine:
                     item["jobs_data"] = json.loads(item["jobs_data"])
                 except Exception:
                     item["jobs_data"] = []
+            for field in ("office_locations", "yc_profile_locations", "job_locations", "location_evidence"):
+                try:
+                    item[field] = json.loads(item.get(field) or "[]")
+                except Exception:
+                    item[field] = []
+            item["employment_location_verified"] = bool(item.get("employment_location_verified"))
             return item
 
     @staticmethod
@@ -538,6 +566,12 @@ class StorageEngine:
                     item["jobs_data"] = json.loads(item["jobs_data"])
                 except Exception:
                     item["jobs_data"] = []
+            for field in ("office_locations", "yc_profile_locations", "job_locations", "location_evidence"):
+                try:
+                    item[field] = json.loads(item.get(field) or "[]")
+                except Exception:
+                    item[field] = []
+            item["employment_location_verified"] = bool(item.get("employment_location_verified"))
             return item
 
     @staticmethod
@@ -931,6 +965,7 @@ class StorageEngine:
                 s.batch,
                 s.primary_location_country,
                 s.primary_location_city,
+                s.employment_location_verified,
                 f.full_name as founder_name,
                 f.title as founder_title,
                 f.linkedin_url,
@@ -1078,7 +1113,11 @@ class StorageEngine:
                 s.batch,
                 s.primary_location_country,
                 s.primary_location_city,
+                s.employment_location_verified,
                 s.office_locations,
+                s.job_locations,
+                s.yc_profile_locations,
+                s.location_evidence,
                 s.website,
                 s.one_liner,
                 s.long_description,
@@ -1115,7 +1154,15 @@ class StorageEngine:
                 return None
             item = dict(row)
             # Parse JSON fields
-            for json_field in ("tags", "jobs_data", "match_rationale", "office_locations"):
+            for json_field in (
+                "tags",
+                "jobs_data",
+                "match_rationale",
+                "office_locations",
+                "job_locations",
+                "yc_profile_locations",
+                "location_evidence",
+            ):
                 if item.get(json_field):
                     try:
                         item[json_field] = json.loads(item[json_field])

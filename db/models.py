@@ -30,7 +30,12 @@ class StartupCreate(BaseModel):
     primary_location_country: Optional[str] = None
     primary_location_state: Optional[str] = None
     primary_location_city: Optional[str] = None
+    # YC profile location is retained separately from current employment locations.
+    yc_profile_locations: List[Dict[str, Any]] = Field(default_factory=list)
     office_locations: List[Dict[str, Any]] = Field(default_factory=list)
+    job_locations: List[Dict[str, Any]] = Field(default_factory=list)
+    location_evidence: List[Dict[str, Any]] = Field(default_factory=list)
+    employment_location_verified: bool = False
     location_source: Optional[str] = None
     location_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
 
