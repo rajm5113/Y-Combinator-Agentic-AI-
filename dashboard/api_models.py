@@ -162,9 +162,6 @@ class PipelineRunRequest(BaseModel):
     """Trigger a pipeline run from the dashboard."""
     batches: List[str] = Field(default_factory=lambda: ["Fall 2026"])
     industries: List[str] = Field(default_factory=list)
-    target_country: str = "India"
-    target_city: str = ""
-    target_location_mode: Literal["office_or_job", "office_only", "job_only"] = "office_or_job"
     limit: Optional[int] = Field(default=5, ge=1, le=500)
     min_fit_score: int = Field(default=50, ge=0, le=100)
     max_concurrency: int = Field(default=5, ge=1, le=20)
