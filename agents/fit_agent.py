@@ -172,9 +172,16 @@ class FitAgent(BaseAgent):
             logger.info(f"⛔ Skipping blacklisted startup during fit check: {startup.get('name')}")
             return None, None, False, True
 
-        # 2. Cache Check (Tier 2 Memory)
+        # 2. Load the canonical candidate profile before cache lookup.
+        # The profile version is part of the cache key so interest/rubric changes
+        # automatically invalidate scores produced under an older profile.
+        profile = self._load_profile()
+        profile_version = str(profile.get("profile_version", "1.0"))
+
+        # 3. Cache Check (Tier 2 Memory)
+        cache_key = {"startup_id": startup_id, "profile_version": profile_version}
         if not force_refresh:
-            cached = self.memory.get_cached_tool_result("evaluate_startup_fit", {"startup_id": startup_id})
+            cached = self.memory.get_cached_tool_result("evaluate_startup_fit", cache_key)
             if cached:
                 try:
                     fit_eval = FitEvaluation(**cached)
@@ -182,8 +189,7 @@ class FitAgent(BaseAgent):
                 except Exception:
                     pass
 
-        # 3. Load Context & Construct Prompt
-        profile = self._load_profile()
+        # 4. Load Context & Construct Prompt
         founders = self.storage.get_founders_by_startup_id(startup_id)
         messages = self._build_evaluation_prompt(profile, startup, founders)
 
@@ -231,7 +237,7 @@ class FitAgent(BaseAgent):
             # 6. Cache in Cache Memory
             self.memory.cache_tool_result(
                 "evaluate_startup_fit",
-                {"startup_id": startup_id},
+                cache_key,
                 fit_eval.model_dump(),
                 ttl=self.CACHE_TTL,
             )
