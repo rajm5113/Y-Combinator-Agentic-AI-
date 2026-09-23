@@ -96,7 +96,18 @@ class Settings(BaseSettings):
         default=["Fall 2026", "Summer 2026", "Winter 2026"]
     )
     default_industries: List[str] = Field(
-        default=["B2B", "Developer Tools", "AI/ML", "Analytics", "SaaS"]
+        default=[
+            "AI/ML",
+            "Developer Tools",
+            "Data & Analytics",
+            "Business Intelligence",
+            "Analytics",
+            "Data Infrastructure",
+            "Workflow Automation",
+            "B2B SaaS",
+            "Fintech",
+            "Revenue Operations",
+        ]
     )
     fit_threshold_high: int = Field(default=75, ge=0, le=100)
     fit_threshold_medium: int = Field(default=50, ge=0, le=100)
