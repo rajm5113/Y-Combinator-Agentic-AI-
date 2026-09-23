@@ -430,7 +430,6 @@ function renderLeadDetail(lead) {
         </div>
       </div>
     `;
-  }
   } else if (status === 'approved') {
     flowBannerHtml = `
       <div class="flow-banner approved">
