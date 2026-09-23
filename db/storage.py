@@ -959,6 +959,7 @@ class StorageEngine:
                 s.batch,
                 s.primary_location_country,
                 s.primary_location_city,
+                s.employment_location_verified,
                 f.full_name as founder_name,
                 f.title as founder_title,
                 f.linkedin_url,
@@ -1106,7 +1107,11 @@ class StorageEngine:
                 s.batch,
                 s.primary_location_country,
                 s.primary_location_city,
+                s.employment_location_verified,
                 s.office_locations,
+                s.job_locations,
+                s.yc_profile_locations,
+                s.location_evidence,
                 s.website,
                 s.one_liner,
                 s.long_description,
@@ -1143,7 +1148,15 @@ class StorageEngine:
                 return None
             item = dict(row)
             # Parse JSON fields
-            for json_field in ("tags", "jobs_data", "match_rationale", "office_locations"):
+            for json_field in (
+                "tags",
+                "jobs_data",
+                "match_rationale",
+                "office_locations",
+                "job_locations",
+                "yc_profile_locations",
+                "location_evidence",
+            ):
                 if item.get(json_field):
                     try:
                         item[json_field] = json.loads(item[json_field])
