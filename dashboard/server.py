@@ -103,6 +103,12 @@ _pipeline_state: dict = {
 async def lifespan(app: FastAPI):
     """Initialize DB schema on startup."""
     storage_engine.init_db()
+    # Backfill founder records into the discovery-stage lead queue so
+    # discoveries are never stranded outside the review UI.
+    try:
+        storage_engine.ensure_outreach_records_for_founders()
+    except Exception as e:
+        logger.warning(f"Lead backfill skipped: {e}")
     logger.info(
         f"Dashboard ready at http://{settings.dashboard_host}:{settings.dashboard_port}"
     )
