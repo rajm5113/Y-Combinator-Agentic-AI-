@@ -268,7 +268,18 @@ class MasterOrchestrator:
                 st_id = s.get("startup_id") or s.get("id")
                 if st_id:
                     existing = self.storage.get_founders_by_startup_id(st_id)
-                    if existing:
+                    startup_record = self.storage.get_startup_by_id(st_id)
+                    has_location = bool(
+                        startup_record
+                        and (
+                            startup_record.get("primary_location_country")
+                            or startup_record.get("office_locations")
+                            or startup_record.get("jobs_data") not in (None, "", "[]", [])
+                        )
+                    )
+                    # Re-fetch existing companies when location evidence has not
+                    # been harvested yet; geography is required before Fit.
+                    if existing and has_location:
                         continue
             slugs_to_process.append(slug)
 
