@@ -390,7 +390,7 @@ class FounderAgent(BaseAgent):
             primary = primary_location(
                 effective_locations,
                 preferred_country=settings.target_country,
-                preferred_city=settings.target_city,
+                preferred_city=settings.india_city_priority[0] if settings.india_city_priority else None,
             )
             employment_location_verified = bool(office_locations or job_locations)
 
