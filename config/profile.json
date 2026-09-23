@@ -1,70 +1,344 @@
 {
-  "candidate_name": "Antigravity Engineer",
-  "headline": "Full-Stack AI Systems & Foundational Software Engineer | 0-to-1 Builder",
-  "email": "engineer@example.com",
-  "linkedin_url": "https://linkedin.com/in/founding-engineer-ai",
-  "portfolio_url": "https://github.com/founding-engineer-ai",
-  "target_roles": [
-    "Founding Engineer",
-    "Staff Software Engineer",
-    "Lead AI Systems Engineer",
-    "Full Stack Engineer"
-  ],
-  "skills": {
-    "languages": ["Python", "TypeScript", "JavaScript", "SQL", "Go"],
-    "frameworks": ["FastAPI", "Next.js", "React", "Node.js", "Pydantic"],
-    "ai_ml": [
-      "AI Agents",
-      "LangGraph / DSPy",
-      "OpenAI Function Calling",
-      "RAG Architecture",
-      "Prompt Compilation",
-      "Vector Databases (Qdrant, pgvector)"
-    ],
-    "cloud_devops": ["Docker", "PostgreSQL", "Redis", "AWS", "GitHub Actions", "CI/CD"],
-    "databases": ["PostgreSQL", "Redis", "SQLite", "Qdrant"]
-  },
-  "experience_highlights": [
-    "Designed and shipped multi-agent orchestration systems cutting LLM token overhead by 70% using deterministic state graphs.",
-    "Engineered production FastAPI backend with async PostgreSQL connection pooling serving 15k+ daily requests with sub-50ms latency.",
-    "Built real-time data ingestion pipelines harvesting 10k+ dynamic web profiles using structured extraction and resilient fallback loops.",
-    "Led technical architecture for 0-to-1 startup products from MVP design to production deployment."
-  ],
-  "featured_projects": [
-    {
-      "name": "Autonomous Market Intelligence Agent Fleet",
-      "description": "Multi-agent research system that continuously harvests company signals, evaluates investment fit, and delivers grounded intelligence dossiers.",
-      "tech_stack": ["Python", "FastAPI", "OpenAI SDK", "PostgreSQL", "Redis"],
-      "role": "Lead Architect & Developer",
-      "impact": "Automated 85% of founder research and eliminated manual outreach qualification."
-    },
-    {
-      "name": "High-Throughput Stateful Workflow Engine",
-      "description": "Event-driven workflow orchestrator with distributed Redis session state and PostgreSQL audit logging.",
-      "tech_stack": ["Python", "Redis", "PostgreSQL", "Docker"],
-      "role": "Core Systems Engineer",
-      "impact": "Zero state drift across distributed worker nodes with deterministic task replay."
-    }
-  ],
-  "target_startup_criteria": {
-    "preferred_stages": ["Pre-Seed", "Seed", "Series A"],
-    "preferred_team_size_max": 25,
-    "preferred_industries": [
-      "Developer Tools",
-      "AI / Machine Learning",
-      "B2B SaaS",
-      "Analytics & Data Infrastructure",
-      "Workflow Automation"
+  "profile_version": "2.0",
+  "profile_purpose": "Canonical candidate-interest and evidence profile used by the Fit Agent to score startup alignment.",
+  "candidate": {
+    "name": "Raj Mishra",
+    "current_role": "Business Analyst – Revenue Operations (Intern) at Payoneer",
+    "current_role_start": "Jun 2025",
+    "current_location": "Bengaluru, India",
+    "education": [
+      "MCA in AI & Data Science — Manipal University Jaipur (ongoing, 2026)",
+      "Entrepreneurship & Management in Technology — PW Institute of Innovation (2024–2026)",
+      "B.Sc. Biotechnology — Dr. Bhimrao Ambedkar University (2023–2025)"
     ]
   },
-  "pitch_angles": {
-    "ai_agent_native": "Obsessed with building production-grade agentic systems that run deterministically with zero token bloat. Ready to own the core AI orchestration layer from Day 1.",
-    "rapid_zero_to_one": "Fast-moving generalist with strong backend systems and web UI capability who thrives in ambiguous early-stage environments.",
-    "infrastructure_scale": "Deep experience building bulletproof data models, caching layers, and high-throughput pipelines that scale cleanly as startup velocity increases."
+  "career_focus": {
+    "primary_interest_areas": [
+      "Agentic AI solutions",
+      "AI / applied AI",
+      "Data Analytics",
+      "Business Intelligence",
+      "Business Analysis / Revenue Operations analytics"
+    ],
+    "secondary_interest_areas": [
+      "AI automation",
+      "Data engineering / ETL / ELT",
+      "Analytics engineering",
+      "AI-assisted business workflows",
+      "Applied ML / RAG / LLM systems"
+    ],
+    "target_roles": [
+      {
+        "role": "Agentic AI Engineer / AI Engineer",
+        "priority": 1
+      },
+      {
+        "role": "Data Analyst",
+        "priority": 1
+      },
+      {
+        "role": "Business Intelligence Analyst",
+        "priority": 1
+      },
+      {
+        "role": "Business Analyst / Revenue Operations Analyst",
+        "priority": 1
+      },
+      {
+        "role": "Applied AI / AI Automation Engineer",
+        "priority": 2
+      },
+      {
+        "role": "Analytics Engineer / Data-focused Software Engineer",
+        "priority": 2
+      },
+      {
+        "role": "Full Stack / Founding Engineer for AI-data products",
+        "priority": 2
+      }
+    ],
+    "preferred_problem_spaces": [
+      "AI agents and agentic workflows",
+      "AI-powered analytics and decision support",
+      "Business intelligence and dashboard automation",
+      "Data analysis and KPI/funnel analytics",
+      "Enterprise AI assistants and MCP integrations",
+      "Data pipelines, ETL/ELT and analytics infrastructure",
+      "Revenue operations / GTM analytics"
+    ]
+  },
+  "current_experience": {
+    "company": "Payoneer",
+    "team": "Revenue Operations",
+    "role": "Business Analyst Intern",
+    "evidence_strength": "strong_current",
+    "evidence": [
+      "Owns Power BI acquisition-funnel control dashboards covering registrations, conversion rate, take rate, AVPU, retention and lead score across multiple regions.",
+      "Queries and models 130 MB+ granular acquisition data with millions of rows using BigQuery and Power BI.",
+      "Builds semantic models using star/snowflake schema, relationship cardinality and DAX.",
+      "Performs Actual-vs-Target variance analysis and recurring vs non-recurring revenue analysis.",
+      "Designed and deployed agentic AI solutions on an enterprise LLM gateway using Claude Opus/Sonnet and OpenAI GPT-4o.",
+      "Built a task-triage assistant integrating Asana and dashboard-analysis agents that surface anomalies, discrepancies and business-ready insights.",
+      "Connects BigQuery to AI assistants via MCP for conversational query, transform, cleanse and update workflows.",
+      "Automates recurring reporting with Power Automate and Microsoft 365."
+    ]
+  },
+  "capability_map": {
+    "agentic_ai": {
+      "priority": "primary",
+      "demonstrated_skills": [
+        "Agentic AI solutions",
+        "LangChain",
+        "LangGraph",
+        "RAG",
+        "MCP integrations",
+        "Function calling",
+        "Prompt engineering",
+        "Enterprise LLM gateways",
+        "Multi-model LLM routing",
+        "AI-assisted development"
+      ],
+      "evidence_projects": [
+        "Autonomous Job Application Agent",
+        "MediMind / MediAssist medical AI project"
+      ],
+      "evidence_level": "strong"
+    },
+    "ai_applied_ml": {
+      "priority": "primary",
+      "demonstrated_skills": [
+        "QLoRA",
+        "DPO",
+        "RAG",
+        "PyTorch",
+        "Hugging Face",
+        "FAISS",
+        "LLM fine-tuning",
+        "Applied ML"
+      ],
+      "evidence_level": "strong"
+    },
+    "data_analytics": {
+      "priority": "primary",
+      "demonstrated_skills": [
+        "SQL",
+        "BigQuery",
+        "Python",
+        "Pandas",
+        "NumPy",
+        "Matplotlib",
+        "Plotly",
+        "R",
+        "Statistical analysis",
+        "Cohort analysis",
+        "Segmentation",
+        "RFM analysis",
+        "A/B testing"
+      ],
+      "evidence_level": "strong"
+    },
+    "business_intelligence": {
+      "priority": "primary",
+      "demonstrated_skills": [
+        "Power BI",
+        "DAX",
+        "Semantic models",
+        "Star schema",
+        "Snowflake schema",
+        "Relationship cardinality",
+        "Report deployment",
+        "Self-service BI",
+        "Tableau",
+        "Google Data Studio"
+      ],
+      "evidence_level": "strong"
+    },
+    "business_analysis_revops": {
+      "priority": "primary",
+      "demonstrated_skills": [
+        "Salesforce pipeline analysis",
+        "Requirements gathering",
+        "Stakeholder reporting",
+        "Gap analysis",
+        "KPI definition",
+        "Acquisition funnel analysis",
+        "Actual-vs-Target analysis",
+        "Attribution analysis",
+        "Conversion rate",
+        "Take rate",
+        "AVPU",
+        "Retention",
+        "CAC",
+        "LTV",
+        "ROAS",
+        "Data storytelling"
+      ],
+      "evidence_level": "strong_current"
+    },
+    "data_engineering": {
+      "priority": "secondary",
+      "demonstrated_skills": [
+        "ETL/ELT pipeline design",
+        "REST APIs",
+        "MySQL",
+        "Cloud SQL",
+        "SQLite",
+        "Dimensional modeling",
+        "Normalized schemas",
+        "Data synchronization",
+        "Google Apps Script",
+        "YouTube Data API"
+      ],
+      "evidence_level": "strong"
+    },
+    "productivity_automation": {
+      "priority": "secondary",
+      "demonstrated_skills": [
+        "Power Automate",
+        "Microsoft 365",
+        "SharePoint",
+        "Teams",
+        "Outlook",
+        "Google Sheets",
+        "Excel",
+        "Workflow automation"
+      ],
+      "evidence_level": "strong"
+    }
+  },
+  "startup_preferences": {
+    "preferred_industries": [
+      "AI / Machine Learning",
+      "Agentic AI",
+      "Developer Tools",
+      "Data & Analytics",
+      "Business Intelligence",
+      "Data Infrastructure",
+      "B2B SaaS",
+      "Workflow Automation",
+      "Fintech",
+      "Revenue Operations / GTM Analytics"
+    ],
+    "preferred_stages": [
+      "Pre-Seed",
+      "Seed",
+      "Series A"
+    ],
+    "preferred_team_size_max": 25,
+    "environment_preferences": [
+      "Small technical teams",
+      "0-to-1 product building",
+      "High ownership",
+      "Data-driven decision making",
+      "Products combining AI with analytics/data workflows"
+    ],
+    "hiring_signal_weight": "moderate",
+    "hiring_signal_note": "Missing or incomplete public job data should not heavily penalize fit when the startup's product/problem-space strongly aligns."
+  },
+  "scoring_framework": {
+    "version": "2.0",
+    "total_points": 100,
+    "dimensions": [
+      {
+        "name": "Agentic AI / AI alignment",
+        "weight": 30,
+        "description": "How directly the startup's product, architecture or problems involve agentic AI, LLMs, AI automation, applied AI/ML, RAG, AI assistants or intelligent workflows."
+      },
+      {
+        "name": "Data Analytics / Business Intelligence alignment",
+        "weight": 30,
+        "description": "How directly the startup uses analytics, BI, dashboards, data products, experimentation, KPI systems, SQL/warehouse workflows or decision intelligence."
+      },
+      {
+        "name": "Role / Business Analysis / RevOps alignment",
+        "weight": 20,
+        "description": "How well the startup can use the candidate's current strengths in business analysis, RevOps, funnel analytics, stakeholder reporting, Salesforce/GTM analytics and KPI ownership."
+      },
+      {
+        "name": "Contribution leverage / technical fit",
+        "weight": 20,
+        "description": "How credibly the candidate could make a high-impact contribution using Python, SQL, Power BI, BigQuery, ETL/ELT, APIs, MCP, LangChain/LangGraph and AI/data engineering skills."
+      }
+    ],
+    "rules": [
+      "Score the startup against the candidate's stated interests and demonstrated evidence, not against whether the startup is objectively good.",
+      "Treat current Payoneer Revenue Operations work as strong evidence for BI, data analytics, business analysis, fintech, GTM/RevOps and enterprise AI use cases.",
+      "Treat agentic AI and AI-powered analytics as the strongest combined interest area.",
+      "A startup can score well through either AI/agentic alignment, data/BI alignment, or a strong combination of both.",
+      "Do not require an exact job-title match when the underlying problem and contribution opportunity are aligned.",
+      "Do not strongly penalize missing hiring information when public YC data is incomplete.",
+      "Use specific startup facts, jobs, tags, description and founder context when available; do not invent missing information.",
+      "Separate demonstrated skills from aspirational interests: demonstrated skills should carry more confidence.",
+      "When evidence is weak or missing, reduce confidence in the score rather than inventing supporting facts."
+    ]
+  },
+  "scoring_thresholds": {
+    "high": 75,
+    "medium": 50,
+    "low": 0,
+    "should_contact_from": 50
   },
   "outreach_constraints": {
     "max_linkedin_note_chars": 300,
     "require_grounded_citations": true,
     "tone": "Direct, technical, peer-to-peer, respectful, humble yet high conviction. No generic AI buzzwords or fluff."
-  }
+  },
+  "notable_projects": [
+    {
+      "name": "Autonomous Job Application Agent",
+      "signals": [
+        "LLM scoring",
+        "LangGraph",
+        "Python",
+        "Playwright",
+        "SQLite",
+        "multi-model routing",
+        "resumable pipeline"
+      ]
+    },
+    {
+      "name": "MediMind / MediAssist medical AI project",
+      "signals": [
+        "PyTorch",
+        "QLoRA",
+        "DPO",
+        "RAG",
+        "FAISS",
+        "LangChain",
+        "Gradio",
+        "applied AI/ML"
+      ]
+    },
+    {
+      "name": "Business Intelligence Dashboards & Data Analysis",
+      "signals": [
+        "Power BI",
+        "DAX",
+        "SQL",
+        "BigQuery",
+        "Python",
+        "R",
+        "dimensional modeling",
+        "ETL"
+      ]
+    },
+    {
+      "name": "Automated influencer discovery pipeline",
+      "signals": [
+        "Google Apps Script",
+        "YouTube Data API",
+        "ETL",
+        "automation",
+        "data-driven lead generation"
+      ]
+    }
+  ],
+  "certifications_and_learning": [
+    "Google Data Analytics Professional Certificate",
+    "Microsoft Power BI Data Analyst / PL-300 preparation",
+    "IBM AI Developer Professional Certificate",
+    "IBM Prompt Engineering & Generative AI",
+    "Python for Everybody",
+    "Google Digital Marketing & E-commerce"
+  ]
 }
