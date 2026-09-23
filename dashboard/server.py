@@ -24,6 +24,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from config.health import health_checker
 from config.logging_buffer import global_log_buffer
+from batch_utils import yc_batch_catalog
 from config.settings import settings
 from db.backup import backup_engine
 from db.storage import storage_engine
@@ -172,9 +173,26 @@ async def get_stats():
 
 @app.get("/api/batches", response_model=List[BatchInfo])
 async def get_batches():
-    """Returns distinct batch names with startup counts."""
+    """Returns the complete YC batch catalog with locally stored startup counts."""
     rows = storage_engine.get_batch_list()
-    return [BatchInfo(batch=r["batch"], count=r["count"]) for r in rows]
+    counts = {r["batch"]: r["count"] for r in rows}
+    catalog = yc_batch_catalog(
+        start_year=settings.yc_batch_start_year,
+        end_year=settings.yc_batch_end_year,
+    )
+    # Keep any locally stored legacy/unknown batch visible too.
+    known = {item["batch"] for item in catalog}
+    for batch, count in counts.items():
+        if batch not in known:
+            catalog.append({"batch": batch, "code": None})
+    return [
+        BatchInfo(
+            batch=item["batch"],
+            count=counts.get(item["batch"], 0),
+            code=item.get("code"),
+        )
+        for item in catalog
+    ]
 
 
 # ─── Leads (List) ──────────────────────────────────────────────
