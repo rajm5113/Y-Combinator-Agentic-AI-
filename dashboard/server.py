@@ -373,9 +373,9 @@ async def trigger_pipeline(payload: PipelineRunRequest, background_tasks: Backgr
         config = PipelineConfig(
             batches=payload.batches,
             industries=payload.industries,
-            target_country=payload.target_country,
-            target_city=payload.target_city,
-            target_location_mode=payload.target_location_mode,
+            target_country=settings.target_country,
+            target_city="",
+            target_location_mode="office_or_job",
             limit=payload.limit,
             min_fit_score=payload.min_fit_score,
             max_concurrency=payload.max_concurrency,
