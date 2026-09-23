@@ -214,7 +214,7 @@ class MasterOrchestrator:
         # deterministic candidate pool so an India-only run is not exhausted
         # by global startups that appear earlier in the YC batch.
         discovery_limit = self.config.limit
-        if self.config.limit and self.config.target_country:
+        if self.config.limit and settings.target_country:
             discovery_limit = min(self.config.limit * 10, 500)
 
         context = {
