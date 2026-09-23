@@ -32,6 +32,11 @@ COUNTRY_ALIASES = {
 }
 
 
+INDIA_CITIES = {
+    "Bengaluru", "Hyderabad", "Mumbai", "Pune", "Chennai",
+    "Delhi NCR", "Gurugram", "Noida",
+}
+
 CITY_ALIASES = {
     "bengaluru": "Bengaluru",
     "bangalore": "Bengaluru",
@@ -105,6 +110,8 @@ def normalize_location(raw: Any) -> Optional[Dict[str, Any]]:
         blob = " ".join(_text(v) for v in text_candidates if v)
         city = city or _normalize_city(blob)
         country = country or _normalize_country(blob)
+        if not country and city in INDIA_CITIES:
+            country = "India"
 
         # Some payloads provide a simple "location": string plus state/region.
         state = _text(raw.get("state") or raw.get("region") or raw.get("province")) or None
@@ -133,6 +140,8 @@ def normalize_location(raw: Any) -> Optional[Dict[str, Any]]:
 
     city = _normalize_city(text)
     country = _normalize_country(text)
+    if not country and city in INDIA_CITIES:
+        country = "India"
     remote = "remote" in text.lower()
 
     # Try comma-separated parts for state/country text.
