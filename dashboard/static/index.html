@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YC Founder Outreach — Human Review & Pipeline Dashboard</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=9">
+  <link rel="stylesheet" href="/static/css/style.css?v=10">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
 </head>
 <body>
@@ -370,7 +370,7 @@
               </select>
             </div>
             <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Startup Limit</label>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;" >Target Startup Count</label>
               <input id="pipeline-limit" type="number" class="text-input" value="5" min="1" max="500" />
             </div>
             <div>
@@ -431,6 +431,10 @@
           <div class="metric-card">
             <div class="metric-label">Evaluated</div>
             <div id="report-evaluated" class="metric-value">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Location Matched</div>
+            <div id="report-location-matched" class="metric-value">0</div>
           </div>
           <div class="metric-card">
             <div class="metric-label">Qualified</div>
@@ -520,6 +524,6 @@
 
   </main>
 
-  <script src="/static/js/app.js?v=9"></script>
+  <script src="/static/js/app.js?v=10"></script>
 </body>
 </html>
