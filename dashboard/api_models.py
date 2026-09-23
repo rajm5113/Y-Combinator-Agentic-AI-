@@ -196,6 +196,9 @@ class HealthResponse(BaseModel):
 class PipelineRunConfigResponse(BaseModel):
     batch: str = "Fall 2026"
     industry: Optional[str] = None
+    target_country: str = "India"
+    target_city: str = ""
+    target_location_mode: str = "office_or_job"
     startup_limit: int = 5
     min_fit_score: int = 50
     max_concurrency: int = 5
@@ -209,6 +212,9 @@ class PipelineRunHistoryItem(BaseModel):
     session_id: str
     batch: str
     industry: Optional[str] = None
+    target_country: str = "India"
+    target_city: str = ""
+    target_location_mode: str = "office_or_job"
     startup_limit: int = 5
     min_fit_score: int = 50
     max_concurrency: int = 5
