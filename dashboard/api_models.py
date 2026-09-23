@@ -40,6 +40,8 @@ class LeadSummary(BaseModel):
     startup_name: str
     slug: str
     batch: str
+    primary_location_country: Optional[str] = None
+    primary_location_city: Optional[str] = None
     founder_name: str
     founder_title: Optional[str] = None
     linkedin_url: Optional[str] = None
@@ -60,6 +62,9 @@ class LeadDetail(BaseModel):
     startup_name: str
     slug: str
     batch: str
+    primary_location_country: Optional[str] = None
+    primary_location_city: Optional[str] = None
+    office_locations: List[Dict[str, Any]] = Field(default_factory=list)
     website: Optional[str] = None
     one_liner: Optional[str] = None
     long_description: Optional[str] = None
