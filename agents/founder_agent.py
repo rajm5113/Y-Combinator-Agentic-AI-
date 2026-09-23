@@ -18,6 +18,7 @@ from agents.base import AgentResult, BaseAgent
 from agents.http_client import ResilientHTTPClient
 from config.llm_client import ModelTier, ResilientLLMClient, llm_client as default_llm_client
 from config.settings import settings
+from location_utils import extract_company_locations, extract_job_locations, primary_location
 from db.memory import MemoryManager, memory_manager as default_memory_manager
 from db.models import FounderCreate, StartupCreate
 from db.storage import StorageEngine, storage_engine as default_storage_engine
@@ -310,6 +311,15 @@ class FounderAgent(BaseAgent):
             if not company_info:
                 continue
 
+            # Resolve current office/company locations and job locations.
+            office_locations = extract_company_locations(company_info)
+            raw_jobs = company_info.get("jobs", []) or []
+            job_locations = extract_job_locations(raw_jobs)
+            primary = primary_location(office_locations)
+            location_source = "yc_company_page" if office_locations else (
+                "yc_job_listing" if job_locations else None
+            )
+
             # Resolve or initialize startup in database
             startup_record = self.storage.get_startup_by_slug(slug)
             if not startup_record:
@@ -323,6 +333,12 @@ class FounderAgent(BaseAgent):
                     team_size=company_info.get("team_size"),
                     status="active",
                     yc_url=f"{settings.yc_base_url}/companies/{slug}",
+                    primary_location_country=primary["country"],
+                    primary_location_state=primary["state"],
+                    primary_location_city=primary["city"],
+                    office_locations=office_locations,
+                    location_source=location_source,
+                    location_confidence=0.9 if office_locations else (0.7 if job_locations else 0.0),
                 )
                 startup_id = self.storage.upsert_startup(startup_create)
                 startup_record = self.storage.get_startup_by_slug(slug)
@@ -392,7 +408,6 @@ class FounderAgent(BaseAgent):
                 })
 
             # Process jobs and update startup hiring status
-            raw_jobs = company_info.get("jobs", []) or []
             if raw_jobs or company_info.get("website"):
                 # Update startup metadata with jobs
                 is_hiring = True if len(raw_jobs) > 0 else (startup_record.get("is_hiring", 0) == 1)
@@ -411,6 +426,15 @@ class FounderAgent(BaseAgent):
                     is_hiring=is_hiring,
                     yc_url=f"{settings.yc_base_url}/companies/{slug}",
                     jobs_data=raw_jobs,
+                    primary_location_country=primary["country"] or startup_record.get("primary_location_country"),
+                    primary_location_state=primary["state"] or startup_record.get("primary_location_state"),
+                    primary_location_city=primary["city"] or startup_record.get("primary_location_city"),
+                    office_locations=office_locations or (
+                        json.loads(startup_record.get("office_locations") or "[]")
+                        if startup_record.get("office_locations") else []
+                    ),
+                    location_source=location_source or startup_record.get("location_source"),
+                    location_confidence=0.9 if office_locations else (0.7 if job_locations else float(startup_record.get("location_confidence") or 0.0)),
                 )
                 self.storage.upsert_startup(startup_update)
 
