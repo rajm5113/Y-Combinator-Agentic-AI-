@@ -550,8 +550,8 @@ class MasterOrchestrator:
 
         logger.info(
             f"🚀 [Pipeline] Starting run session={self.session_id} | "
-            f"batches={self.config.batches} | target={self.config.target_country or 'Any'}"
-            f"/{self.config.target_city or 'All cities'} | "
+            f"batches={self.config.batches} | employment_target=India | "
+            f"city_priority={settings.india_city_priority[:5]}... | "
             f"min_score={self.config.min_fit_score} | concurrency={self.config.max_concurrency}"
         )
 
