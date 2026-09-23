@@ -373,6 +373,8 @@ class FounderAgent(BaseAgent):
                     email=f.get("email"),
                 )
                 founder_id = self.storage.upsert_founder(founder_create)
+                # Every verified founder becomes a discovery-stage lead row.
+                self.storage.ensure_outreach_record(startup_id, founder_id)
                 stats["founders_extracted"] += 1
 
                 if was_existing:
