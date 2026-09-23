@@ -239,7 +239,8 @@ def locations_match(
 ) -> str:
     """Return MATCH, MISMATCH, or UNKNOWN for the requested geography."""
     target_country = _normalize_country(target_country) if target_country else None
-    target_city = _normalize_city(target_city) if target_city else None
+    raw_target_city = _text(target_city).strip()
+    target_city = _normalize_city(raw_target_city) if raw_target_city else None
 
     all_locations = [*office_locations, *job_locations]
     if not all_locations:
@@ -247,7 +248,14 @@ def locations_match(
 
     for loc in all_locations:
         country_ok = not target_country or loc.get("country") == target_country
-        city_ok = not target_city or loc.get("city") == target_city
+        if not raw_target_city:
+            city_ok = True
+        elif target_city:
+            city_ok = loc.get("city") == target_city
+        else:
+            raw = _text(loc.get("raw")).lower()
+            city_ok = raw_target_city.lower() in raw
+
         if country_ok and city_ok:
             return "MATCH"
 
