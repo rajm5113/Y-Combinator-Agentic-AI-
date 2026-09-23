@@ -315,7 +315,7 @@ class FounderAgent(BaseAgent):
             office_locations = extract_company_locations(company_info)
             raw_jobs = company_info.get("jobs", []) or []
             job_locations = extract_job_locations(raw_jobs)
-            primary = primary_location(office_locations)
+            primary = primary_location(office_locations or job_locations)
             location_source = "yc_company_page" if office_locations else (
                 "yc_job_listing" if job_locations else None
             )
