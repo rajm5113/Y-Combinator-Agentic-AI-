@@ -33,6 +33,10 @@ class MemoryManager:
         serialized = json.dumps(value, default=str)
         try:
             self.client.hset(session_key, key, serialized)
+            # Redis hashes do not accept TTL on hset itself; refresh the
+            # session key TTL after each write so session state expires.
+            if ttl and hasattr(self.client, "expire"):
+                self.client.expire(session_key, ttl)
             return True
         except Exception as e:
             logger.error(f"Error setting session state: {e}")
