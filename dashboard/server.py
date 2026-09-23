@@ -147,10 +147,13 @@ async def get_stats():
     raw = storage_engine.get_pipeline_stats()
     outreach = raw.get("outreach_status", {})
     needs_review = outreach.get("draft", 0) + outreach.get("review", 0)
+    total_startups = raw.get("startups", 0)
+    total_evaluated = raw.get("fit_evaluations", 0)
     return FunnelStats(
-        total_startups=raw.get("startups", 0),
+        total_startups=total_startups,
         total_founders=raw.get("founders", 0),
-        total_evaluated=raw.get("fit_evaluations", 0),
+        total_evaluated=total_evaluated,
+        fit_pending=max(total_startups - total_evaluated, 0),
         fit_high=raw.get("fit_high", 0),
         fit_medium=raw.get("fit_medium", 0),
         fit_low=raw.get("fit_low", 0),
