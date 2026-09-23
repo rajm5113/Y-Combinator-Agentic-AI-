@@ -112,18 +112,30 @@ class Settings(BaseSettings):
     fit_threshold_high: int = Field(default=75, ge=0, le=100)
     fit_threshold_medium: int = Field(default=50, ge=0, le=100)
 
-    # Geography defaults for employment-targeted discovery
+    # Employment geography: India is fixed; cities are a ranking preference, not a filter.
     target_country: str = Field(default="India", validation_alias="TARGET_COUNTRY")
-    target_city: str = Field(default="", validation_alias="TARGET_CITY")
-    target_location_mode: str = Field(
-        default="office_or_job",
-        validation_alias="TARGET_LOCATION_MODE",
-        description="Match target geography against current company offices and active job locations.",
-    )
     target_location_unknown_policy: str = Field(
         default="hold",
         validation_alias="TARGET_LOCATION_UNKNOWN_POLICY",
-        description="What to do when no office/job location is available: hold, exclude, or include.",
+        description="Hold startups when current India employment location evidence is unavailable.",
+    )
+    india_city_priority: List[str] = Field(
+        default=[
+            "Bengaluru",
+            "Delhi NCR",
+            "Gurugram",
+            "Hyderabad",
+            "Noida",
+            "Pune",
+            "Mumbai",
+            "Chennai",
+            "Ahmedabad",
+            "Jaipur",
+            "Chandigarh",
+            "Kolkata",
+            "Kochi",
+        ],
+        description="Priority order for India employment locations. All Indian cities remain eligible.",
     )
 
     # YC batch catalog
