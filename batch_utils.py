@@ -14,6 +14,8 @@ def yc_batch_catalog(start_year: int = 2005, end_year: int = 2026) -> List[Dict[
     batches: List[Dict[str, str]] = []
     for year in range(end_year, start_year - 1, -1):
         seasons = ["Summer", "Winter"]
+        if year == start_year:
+            seasons = ["Summer"]
         if year == end_year:
             seasons = ["Fall", "Summer", "Winter"]
         for season in seasons:
