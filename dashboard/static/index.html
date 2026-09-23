@@ -343,18 +343,23 @@
               </select>
             </div>
             <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Target City</label>
-              <select id="pipeline-city-select" class="select-input">
-                <option value="" selected>All India</option>
-                <option value="Bengaluru">Bengaluru</option>
-                <option value="Hyderabad">Hyderabad</option>
-                <option value="Pune">Pune</option>
-                <option value="Mumbai">Mumbai</option>
-                <option value="Delhi NCR">Delhi NCR</option>
-                <option value="Gurugram">Gurugram</option>
-                <option value="Noida">Noida</option>
-                <option value="Chennai">Chennai</option>
-              </select>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Target City (optional)</label>
+              <input id="pipeline-city-select" class="text-input" list="pipeline-city-options" placeholder="All India — type a city if needed" />
+              <datalist id="pipeline-city-options">
+                <option value="Bengaluru"></option>
+                <option value="Hyderabad"></option>
+                <option value="Pune"></option>
+                <option value="Mumbai"></option>
+                <option value="Delhi NCR"></option>
+                <option value="Gurugram"></option>
+                <option value="Noida"></option>
+                <option value="Chennai"></option>
+                <option value="Ahmedabad"></option>
+                <option value="Jaipur"></option>
+                <option value="Chandigarh"></option>
+                <option value="Kolkata"></option>
+                <option value="Kochi"></option>
+              </datalist>
             </div>
             <div>
               <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Location Match</label>
