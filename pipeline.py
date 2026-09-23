@@ -218,10 +218,17 @@ class MasterOrchestrator:
         self._notify_progress("stage_start", {"stage": PipelineStage.DISCOVERY.value})
 
         agent = DiscoveryAgent()
+        # Geography is applied after founder/company enrichment. Over-fetch a
+        # deterministic candidate pool so an India-only run is not exhausted
+        # by global startups that appear earlier in the YC batch.
+        discovery_limit = self.config.limit
+        if self.config.limit and self.config.target_country:
+            discovery_limit = min(self.config.limit * 10, 500)
+
         context = {
             "batches": self.config.batches,
             "industries": self.config.industries,
-            "limit": self.config.limit,
+            "limit": discovery_limit,
             "force_refresh": self.config.force_refresh,
         }
         res = await agent.run(context)
