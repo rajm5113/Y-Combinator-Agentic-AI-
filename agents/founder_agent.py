@@ -387,7 +387,11 @@ class FounderAgent(BaseAgent):
             location_evidence = list(official_location_result.get("evidence", []))
 
             effective_locations = office_locations or job_locations
-            primary = primary_location(effective_locations)
+            primary = primary_location(
+                effective_locations,
+                preferred_country=settings.target_country,
+                preferred_city=settings.target_city,
+            )
             employment_location_verified = bool(office_locations or job_locations)
 
             if office_locations:
