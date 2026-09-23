@@ -256,7 +256,7 @@ body {
   gap: 0.75rem;
 }
 
-.flow-banner.draft { border-left-color: var(--accent-warning); }
+.flow-banner.draft { border-left-color: var(--accent-warning); }\n.flow-banner.discovered { border-left-color: var(--accent-primary); }
 .flow-banner.approved { border-left-color: var(--accent-success); }
 .flow-banner.sent { border-left-color: var(--accent-primary); }
 .flow-banner.replied { border-left-color: var(--accent-purple); }
