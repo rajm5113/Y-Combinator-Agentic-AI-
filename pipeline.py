@@ -23,7 +23,7 @@ from agents.fit_agent import FitAgent
 from agents.founder_agent import FounderAgent
 from agents.message_agent import MessageAgent
 from config.settings import settings
-from location_utils import extract_job_locations, locations_match
+from location_utils import extract_job_locations, india_employment_rank
 from db.memory import MemoryManager, memory_manager as default_memory_manager
 from db.storage import StorageEngine, storage_engine as default_storage_engine
 
@@ -59,14 +59,6 @@ class PipelineConfig(BaseModel):
     target_country: str = Field(
         default_factory=lambda: settings.target_country,
         description="Country in which the candidate wants current offices or active jobs.",
-    )
-    target_city: str = Field(
-        default_factory=lambda: settings.target_city,
-        description="Optional city restriction inside the target country.",
-    )
-    target_location_mode: str = Field(
-        default_factory=lambda: settings.target_location_mode,
-        description="Location evidence to accept: office_or_job, office_only, or job_only.",
     )
     target_location_unknown_policy: str = Field(
         default_factory=lambda: settings.target_location_unknown_policy,
@@ -358,8 +350,8 @@ class MasterOrchestrator:
         return all_startup_ids
 
     def _filter_by_target_location(self, startup_ids: List[int], report: PipelineReport) -> List[int]:
-        """Deterministic geography gate: only pass India/city-matching startups to Fit."""
-        matched: List[int] = []
+        """Keep all startups with current India employment evidence, ordered by city priority."""
+        candidates = []
         filtered = 0
         unknown = 0
 
@@ -371,6 +363,7 @@ class MasterOrchestrator:
 
             office_locations = startup.get("office_locations") or []
             job_locations = startup.get("job_locations") or []
+
             if not job_locations:
                 raw_jobs = startup.get("jobs_data") or []
                 if isinstance(raw_jobs, str):
@@ -379,37 +372,43 @@ class MasterOrchestrator:
                     except Exception:
                         raw_jobs = []
                 job_locations = extract_job_locations(raw_jobs)
-            if self.config.target_location_mode == "office_only":
-                job_locations = []
-            elif self.config.target_location_mode == "job_only":
-                office_locations = []
 
-            match = locations_match(
+            rank = india_employment_rank(
                 office_locations=office_locations,
                 job_locations=job_locations,
-                target_country=self.config.target_country,
-                target_city=self.config.target_city,
+                city_priority=settings.india_city_priority,
             )
 
-            if match == "MATCH":
-                matched.append(sid)
-            elif match == "UNKNOWN" and self.config.target_location_unknown_policy == "include":
-                matched.append(sid)
-            elif match == "UNKNOWN":
-                unknown += 1
-            else:
-                filtered += 1
+            if rank is None:
+                if startup.get("primary_location_country") or startup.get("yc_profile_locations"):
+                    filtered += 1
+                else:
+                    unknown += 1
+                continue
 
-        report.total_location_matched = len(matched)
+            candidates.append((rank, sid))
+
+        candidates.sort(key=lambda item: item[0])
+
+        # "Target Startup Count" limits how many India matches enter Fit/Message
+        # processing; it does not exclude lower-priority Indian cities from eligibility.
+        selected = [sid for _, sid in candidates]
+        if self.config.limit:
+            selected = selected[: self.config.limit]
+
+        report.total_location_matched = len(selected)
         report.total_location_filtered = filtered
         report.total_location_unknown = unknown
 
-        logger.info(
-            f"[Location Gate] target={self.config.target_country or 'Any'}"
-            f"/{self.config.target_city or 'All cities'} "
-            f"matched={len(matched)} filtered={filtered} unknown={unknown}"
+        preview = ", ".join(
+            f"{rank[2] or 'Other India'}:{sid}" for rank, sid in candidates[:10]
         )
-        return matched
+        logger.info(
+            f"[India Employment Gate] candidates={len(candidates)} selected={len(selected)} "
+            f"filtered={filtered} unknown={unknown} | priority={preview}"
+        )
+        return selected
+
 
     async def _run_stage_fit(
         self,
@@ -563,9 +562,9 @@ class MasterOrchestrator:
                     session_id=self.session_id,
                     batch=self.config.batches[0] if self.config.batches else "",
                     industry=self.config.industries[0] if self.config.industries else None,
-                    target_country=self.config.target_country,
-                    target_city=self.config.target_city,
-                    target_location_mode=self.config.target_location_mode,
+                    target_country=settings.target_country,
+                    target_city="",
+                    target_location_mode="office_or_job",
                     startup_limit=self.config.limit or 0,
                     min_fit_score=self.config.min_fit_score,
                     max_concurrency=self.config.max_concurrency,
