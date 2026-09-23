@@ -136,8 +136,10 @@ async function loadStats() {
     setText('metric-startups', data.total_startups);
     setText('metric-founders', data.total_founders);
     setText('metric-evaluated', data.total_evaluated);
+    setText('metric-fit-pending', data.fit_pending || 0);
     setText('metric-high-fit', data.fit_high);
     setText('metric-medium-fit', data.fit_medium);
+    setText('metric-low-fit', data.fit_low || 0);
     setText('metric-drafts', data.total_drafts);
     setText('metric-needs-review', data.needs_review || data.outreach_draft);
     setText('metric-approved', data.outreach_approved);
