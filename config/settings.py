@@ -112,6 +112,24 @@ class Settings(BaseSettings):
     fit_threshold_high: int = Field(default=75, ge=0, le=100)
     fit_threshold_medium: int = Field(default=50, ge=0, le=100)
 
+    # Geography defaults for employment-targeted discovery
+    target_country: str = Field(default="India", validation_alias="TARGET_COUNTRY")
+    target_city: str = Field(default="", validation_alias="TARGET_CITY")
+    target_location_mode: str = Field(
+        default="office_or_job",
+        validation_alias="TARGET_LOCATION_MODE",
+        description="Match target geography against current company offices and active job locations.",
+    )
+    target_location_unknown_policy: str = Field(
+        default="hold",
+        validation_alias="TARGET_LOCATION_UNKNOWN_POLICY",
+        description="What to do when no office/job location is available: hold, exclude, or include.",
+    )
+
+    # YC batch catalog
+    yc_batch_start_year: int = Field(default=2005, ge=2005, le=2100)
+    yc_batch_end_year: int = Field(default=2026, ge=2005, le=2100)
+
     # Server Defaults
     server_host: str = Field(default="127.0.0.1")
     server_port: int = Field(default=8000)
