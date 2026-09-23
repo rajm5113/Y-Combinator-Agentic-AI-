@@ -31,6 +31,10 @@ class InMemoryCache:
         self._store[key] = str(value)
         return True
 
+    def expire(self, key: str, seconds: int) -> bool:
+        # In-memory fallback is process-local; TTL is best-effort here.
+        return key in self._store or key in self._hashes
+
     def delete(self, key: str) -> int:
         if key in self._store:
             del self._store[key]
