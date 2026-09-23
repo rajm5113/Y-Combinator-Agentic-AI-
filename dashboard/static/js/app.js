@@ -1196,7 +1196,7 @@ async function loadPipelineHistory() {
 
     tbody.innerHTML = history.map((item) => {
       const stats = item.stats_json || {};
-      const statsStr = `D:${stats.discovered || 0} Q:${stats.qualified || 0} M:${stats.drafts || 0}`;
+      const statsStr = `D:${stats.discovered || 0} F:${stats.fit_evaluated || 0}/${(stats.fit_evaluated || 0) + (stats.fit_failed || 0)} Q:${stats.qualified || 0} M:${stats.drafts || 0}`;
       const statusClass = item.status === 'completed' ? 'badge-success' : (item.status === 'cancelled' ? 'badge-warning' : (item.status === 'running' ? 'badge-warning' : 'badge-danger'));
       const duration = item.duration_seconds ? `${item.duration_seconds.toFixed(1)}s` : '-';
       const started = item.started_at ? item.started_at.split('.')[0].replace('T', ' ') : '-';
