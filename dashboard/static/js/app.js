@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupNavigation();
   setupFilterListeners();
   setupPipelineForm();
+  setupGeographyListeners();
   setupBlacklistForm();
   loadStats();
   loadBatches();
@@ -179,10 +180,12 @@ async function loadBatches() {
 
     const pipeBatch = document.getElementById('pipeline-batch-select');
     if (pipeBatch) {
+      const current = pipeBatch.value || 'Fall 2026';
       pipeBatch.innerHTML = '';
       batches.forEach((b) => {
-        pipeBatch.innerHTML += `<option value="${escapeHtml(b.batch)}">${escapeHtml(b.batch)} (${b.count} startups)</option>`;
+        pipeBatch.innerHTML += `<option value="${escapeHtml(b.batch)}">${escapeHtml(b.batch)} (${b.count} stored)</option>`;
       });
+      pipeBatch.value = batches.some((b) => b.batch === current) ? current : (batches[0]?.batch || 'Fall 2026');
     }
   } catch (err) {
     console.error('loadBatches error:', err);
@@ -922,6 +925,22 @@ function setupBlacklistForm() {
   });
 }
 
+function setupGeographyListeners() {
+  const country = document.getElementById('pipeline-country-select');
+  const city = document.getElementById('pipeline-city-select');
+  if (!country || !city) return;
+
+  const syncCity = () => {
+    const isIndia = country.value === 'India';
+    const anyCountry = country.value === '';
+    city.disabled = !isIndia || anyCountry;
+    if (!isIndia) city.value = '';
+  };
+
+  country.addEventListener('change', syncCity);
+  syncCity();
+}
+
 // ─── Pipeline Trigger & 1s Polling ─────────────────────────────
 function setupPipelineForm() {
   const form = document.getElementById('pipeline-run-form');
@@ -930,6 +949,9 @@ function setupPipelineForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const batch = document.getElementById('pipeline-batch-select').value;
+    const targetCountry = document.getElementById('pipeline-country-select').value;
+    const targetCity = document.getElementById('pipeline-city-select').value;
+    const targetLocationMode = document.getElementById('pipeline-location-mode').value;
     const limit = parseInt(document.getElementById('pipeline-limit').value, 10) || 5;
     const minScore = parseInt(document.getElementById('pipeline-min-score').value, 10) || 50;
     const concurrency = parseInt(document.getElementById('pipeline-concurrency').value, 10) || 5;
@@ -957,6 +979,9 @@ function setupPipelineForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           batches: [batch],
+          target_country: targetCountry,
+          target_city: targetCity,
+          target_location_mode: targetLocationMode,
           limit: limit,
           min_fit_score: minScore,
           max_concurrency: concurrency,
@@ -1107,7 +1132,9 @@ async function loadLastPipelineConfig() {
       const minScore = config.min_fit_score !== undefined ? config.min_fit_score : 50;
       const concurrency = config.max_concurrency || 5;
       const dryRun = config.dry_run ? ' [Dry Run]' : '';
-      details.textContent = `Batch: ${batch} • Limit: ${limit} • Min Score: ${minScore} • Concurrency: ${concurrency}${dryRun}`;
+      const targetCountry = config.target_country || 'Any Country';
+      const targetCity = config.target_city || 'All cities';
+      details.textContent = `Batch: ${batch} • ${targetCountry} / ${targetCity} • Limit: ${limit} • Min Score: ${minScore} • Concurrency: ${concurrency}${dryRun}`;
     }
   } catch (err) {
     console.debug('Failed to load last pipeline config:', err);
@@ -1144,6 +1171,9 @@ async function triggerQuickRunAgain() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         batches: [config.batch || 'Fall 2026'],
+        target_country: config.target_country || 'India',
+        target_city: config.target_city || '',
+        target_location_mode: config.target_location_mode || 'office_or_job',
         limit: config.startup_limit || 5,
         min_fit_score: config.min_fit_score || 50,
         max_concurrency: config.max_concurrency || 5,
