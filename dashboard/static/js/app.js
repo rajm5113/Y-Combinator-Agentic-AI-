@@ -536,6 +536,11 @@ function renderLeadDetail(lead) {
             ${escapeHtml(lead.one_liner || 'No one-liner provided')}
           </p>
 
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            <strong>Current location:</strong>
+            ${escapeHtml([lead.primary_location_city, lead.primary_location_country].filter(Boolean).join(', ') || 'Location not harvested')}
+          </div>
+
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; max-height: 120px; overflow-y: auto;">
             ${escapeHtml(lead.long_description || '')}
           </p>
