@@ -42,6 +42,7 @@ class LeadSummary(BaseModel):
     batch: str
     primary_location_country: Optional[str] = None
     primary_location_city: Optional[str] = None
+    employment_location_verified: bool = False
     founder_name: str
     founder_title: Optional[str] = None
     linkedin_url: Optional[str] = None
@@ -64,7 +65,11 @@ class LeadDetail(BaseModel):
     batch: str
     primary_location_country: Optional[str] = None
     primary_location_city: Optional[str] = None
+    employment_location_verified: bool = False
     office_locations: List[Dict[str, Any]] = Field(default_factory=list)
+    job_locations: List[Dict[str, Any]] = Field(default_factory=list)
+    yc_profile_locations: List[Dict[str, Any]] = Field(default_factory=list)
+    location_evidence: List[Dict[str, Any]] = Field(default_factory=list)
     website: Optional[str] = None
     one_liner: Optional[str] = None
     long_description: Optional[str] = None
