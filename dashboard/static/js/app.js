@@ -400,7 +400,20 @@ function renderLeadDetail(lead) {
 
   // Build the Human-in-the-Loop Action Banner
   let flowBannerHtml = '';
-  if (status === 'draft' || status === 'review') {
+  if (status === 'discovered') {
+    flowBannerHtml = `
+      <div class="flow-banner discovered">
+        <div class="flow-title">
+          <span>🔎 Status: Discovered — Awaiting Qualification</span>
+          <span class="badge badge-status badge-discovered">Discovered</span>
+        </div>
+        <div class="flow-desc">This founder was discovered and saved to the lead queue. Fit evaluation or message drafting may not be complete yet. You can inspect the company and founder dossier now. Message generation remains gated on fit qualification.</div>
+        <div class="flow-actions">
+          <button class="btn btn-outline" style="color: var(--accent-danger);" onclick="confirmBlacklistCompany()">🚫 Blacklist Company</button>
+        </div>
+      </div>
+    `;
+  } else if (status === 'draft' || status === 'review') {
     flowBannerHtml = `
       <div class="flow-banner draft">
         <div class="flow-title">
