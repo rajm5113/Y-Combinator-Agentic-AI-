@@ -303,32 +303,33 @@ async def delete_blacklist(entry_id: int):
 
 @app.post("/api/pipeline/run", response_model=PipelineStatusResponse)
 async def trigger_pipeline(payload: PipelineRunRequest, background_tasks: BackgroundTasks):
-    """Launches the pipeline as an async background task."""
-    if _pipeline_state["is_running"]:
-        raise HTTPException(409, "A pipeline run is already in progress")
+    """Launch exactly one operator-triggered pipeline run."""
+    async with _pipeline_lock:
+        if _pipeline_state["is_running"]:
+            raise HTTPException(409, "A pipeline run is already in progress")
 
-    config = PipelineConfig(
-        batches=payload.batches,
-        industries=payload.industries,
-        limit=payload.limit,
-        min_fit_score=payload.min_fit_score,
-        max_concurrency=payload.max_concurrency,
-        dry_run=payload.dry_run,
-    )
+        config = PipelineConfig(
+            batches=payload.batches,
+            industries=payload.industries,
+            limit=payload.limit,
+            min_fit_score=payload.min_fit_score,
+            max_concurrency=payload.max_concurrency,
+            dry_run=payload.dry_run,
+        )
 
-    _pipeline_state["is_running"] = True
-    _pipeline_state["started_at"] = datetime.now(timezone.utc).isoformat()
-    _pipeline_state["progress"] = "Starting..."
-    _pipeline_state["session_id"] = None
-    _pipeline_state["last_report"] = None
+        _pipeline_state["is_running"] = True
+        _pipeline_state["started_at"] = datetime.now(timezone.utc).isoformat()
+        _pipeline_state["progress"] = "Starting..."
+        _pipeline_state["session_id"] = None
+        _pipeline_state["last_report"] = None
 
-    background_tasks.add_task(_run_pipeline_background, config)
+        background_tasks.add_task(_run_pipeline_background, config)
 
-    return PipelineStatusResponse(
-        is_running=True,
-        started_at=_pipeline_state["started_at"],
-        progress="Starting...",
-    )
+        return PipelineStatusResponse(
+            is_running=True,
+            started_at=_pipeline_state["started_at"],
+            progress="Starting...",
+        )
 
 
 @app.get("/api/pipeline/status", response_model=PipelineStatusResponse)
