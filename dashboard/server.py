@@ -6,6 +6,7 @@ StorageEngine + MemoryManager that the CLI uses.
 """
 
 import asyncio
+import os
 import csv
 import io
 import json
@@ -470,6 +471,11 @@ async def export_leads(
 
 # ─── Phase 6: Health & Diagnostics ─────────────────────────────
 
+@app.get("/health")
+async def render_health():
+    """Minimal unauthenticated health endpoint for Render infrastructure probes."""
+    return {"status": "ok"}
+
 @app.get("/api/health", response_model=HealthResponse)
 async def check_health():
     """Runs end-to-end diagnostics on PostgreSQL, Redis, OpenRouter, and Pipeline."""
@@ -548,7 +554,10 @@ async def list_backups():
 @app.post("/api/backups/restore")
 async def restore_backup(payload: BackupRestoreRequest):
     """Restores database state from a specified backup snapshot."""
-    res = backup_engine.restore_backup(payload.filename)
+    filename = os.path.basename(payload.filename)
+    if filename != payload.filename:
+        raise HTTPException(400, "Invalid backup filename")
+    res = backup_engine.restore_backup(filename)
     if not res.get("success"):
         raise HTTPException(400, res.get("error", "Restore failed"))
     return res
