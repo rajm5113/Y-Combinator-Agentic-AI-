@@ -92,16 +92,17 @@ def _jsonld_locations(block: str) -> List[Dict[str, Any]]:
     for obj in _walk_json(data):
         for key in ("address",):
             address = obj.get(key)
-            if isinstance(address, dict):
-                loc = normalize_location(address)
-                if loc and (loc.get("city") or loc.get("country") or loc.get("state")):
-                    loc["evidence_type"] = "official_structured_address"
-                    locations.append(loc)
+            if isinstance(address, (dict, list, str)):
+                locs = normalize_locations([address])
+                for loc in locs:
+                    if loc and (loc.get("city") or loc.get("country") or loc.get("state")):
+                        loc["evidence_type"] = "official_structured_address"
+                        locations.append(loc)
 
         for key in ("location", "locations"):
             nested = obj.get(key)
-            if isinstance(nested, (dict, list)):
-                for loc in normalize_locations(nested):
+            if isinstance(nested, (dict, list, str)):
+                for loc in normalize_locations([nested]):
                     if loc and (loc.get("city") or loc.get("country") or loc.get("state")):
                         loc["evidence_type"] = "official_structured_location"
                         locations.append(loc)
