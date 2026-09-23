@@ -487,6 +487,41 @@ class StorageEngine:
             return item
 
     @staticmethod
+    def ensure_outreach_record(startup_id: int, founder_id: int) -> int:
+        """Creates a discovery-stage outreach record for every founder exactly once."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO outreach_records (
+                    startup_id, founder_id, status, active_channel, selected_message
+                ) VALUES (?, ?, 'discovered', 'linkedin', NULL)
+                ON CONFLICT(startup_id, founder_id) DO NOTHING
+            """, (startup_id, founder_id))
+            cursor.execute(
+                "SELECT id FROM outreach_records WHERE startup_id = ? AND founder_id = ?",
+                (startup_id, founder_id),
+            )
+            row = cursor.fetchone()
+            return row["id"] if row else 0
+
+    @staticmethod
+    def ensure_outreach_records_for_founders() -> int:
+        """Backfills discovery-stage outreach records for founders already in storage."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO outreach_records (
+                    startup_id, founder_id, status, active_channel, selected_message
+                )
+                SELECT f.startup_id, f.id, 'discovered', 'linkedin', NULL
+                FROM founders f
+                LEFT JOIN outreach_records r
+                    ON r.startup_id = f.startup_id AND r.founder_id = f.id
+                WHERE r.id IS NULL
+            """)
+            return cursor.rowcount
+
+    @staticmethod
     def save_message_drafts(drafts: MessageDrafts) -> int:
         """Saves message drafts and initializes the corresponding outreach record."""
         with get_db_connection() as conn:
@@ -513,12 +548,21 @@ class StorageEngine:
             )
             draft_id = cursor.fetchone()["id"]
 
-            # Initialize or keep existing outreach record
+            # Initialize or promote the outreach record.
+            # Discovery-stage records become reviewable drafts once messages exist.
             cursor.execute("""
                 INSERT INTO outreach_records (startup_id, founder_id, status, active_channel, selected_message)
                 VALUES (?, ?, 'draft', 'linkedin', ?)
                 ON CONFLICT(startup_id, founder_id) DO NOTHING
             """, (drafts.startup_id, drafts.founder_id, drafts.linkedin_note))
+            cursor.execute("""
+                UPDATE outreach_records
+                SET status = 'draft',
+                    active_channel = 'linkedin',
+                    selected_message = COALESCE(?, selected_message),
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE startup_id = ? AND founder_id = ? AND status = 'discovered'
+            """, (drafts.linkedin_note, drafts.startup_id, drafts.founder_id))
 
             return draft_id
 
