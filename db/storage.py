@@ -1326,6 +1326,9 @@ class StorageEngine:
             if not row:
                 return None
             res = dict(row)
+            res["target_country"] = res.get("target_country") or "India"
+            res["target_city"] = res.get("target_city") or ""
+            res["target_location_mode"] = res.get("target_location_mode") or "office_or_job"
             res["dry_run"] = bool(res.get("dry_run"))
             if res.get("started_at"):
                 res["started_at"] = str(res["started_at"])
@@ -1349,6 +1352,9 @@ class StorageEngine:
             history = []
             for r in rows:
                 item = dict(r)
+                item["target_country"] = item.get("target_country") or "India"
+                item["target_city"] = item.get("target_city") or ""
+                item["target_location_mode"] = item.get("target_location_mode") or "office_or_job"
                 item["dry_run"] = bool(item.get("dry_run"))
                 if item.get("stats_json") and isinstance(item["stats_json"], str):
                     try:
