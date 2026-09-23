@@ -632,6 +632,14 @@ class MasterOrchestrator:
                 extracted_ids = await self._run_stage_founders(startups, report)
                 if extracted_ids:
                     startup_ids = list(set(startup_ids + extracted_ids))
+                founder_stage = report.stages.get(PipelineStage.FOUNDER)
+                if founder_stage and not founder_stage.success:
+                    logger.error(
+                        "[Pipeline] Founder extraction failed for all selected startups; "
+                        "stopping before location/fit stages."
+                    )
+                    report.success = False
+                    return report
             else:
                 logger.info("[Pipeline] Skipping Founder stage.")
 
@@ -661,7 +669,8 @@ class MasterOrchestrator:
             report.total_qualified = len(qualified_ids)
             logger.info(
                 f"[Pipeline Gate] {len(qualified_ids)} startups qualified in current run "
-                f"(score >= {self.config.min_fit_score}) out of {len(startup_ids)} evaluated "
+                f"(score >= {self.config.min_fit_score}) out of {len(location_scoped_ids)} "
+                f"location-eligible startups "
                 f"(total qualified in DB: {len(all_qualified_ids)})."
             )
 
@@ -687,7 +696,14 @@ class MasterOrchestrator:
             else:
                 logger.info("[Pipeline] Skipping Message drafting stage.")
 
-            report.success = not self.cancel_event.is_set()
+            stage_failures = [
+                stage for stage in report.stages.values()
+                if not stage.success
+            ]
+            report.success = (
+                not self.cancel_event.is_set()
+                and not stage_failures
+            )
 
         except Exception as e:
             logger.error(f"[Pipeline] Fatal error during execution: {e}", exc_info=True)
