@@ -330,7 +330,12 @@ class DiscoveryAgent(BaseAgent):
         all_startups: List[Dict[str, Any]] = []
 
         # ── Cache check ──
-        cache_params = {"batches": sorted(batches), "industries": sorted(industries)}
+        cache_params = {
+            "batches": sorted(batches),
+            "industries": sorted(industries),
+            "limit": limit,
+            "cache_schema": "discovery-v2-india-location",
+        }
         cached = memory_manager.get_cached_tool_result("search_yc_directory", cache_params)
         if cached:
             stats["cached_hits"] = len(cached) if isinstance(cached, list) else 1
