@@ -62,7 +62,14 @@ async def require_dashboard_auth(
     credentials: Optional[HTTPBasicCredentials] = Depends(basic_auth),
 ):
     """Protect API/state-changing endpoints when dashboard auth is enabled."""
-    if not settings.dashboard_auth_enabled or not request.url.path.startswith("/api/"):
+    if not settings.dashboard_auth_enabled:
+        return
+
+    # Keep infrastructure probes and static assets publicly reachable.
+    # The main dashboard page is protected so the browser can perform a
+    # standard HTTP Basic Auth challenge before its JavaScript calls the API.
+    public_paths = {"/health", "/api/health"}
+    if request.url.path in public_paths or request.url.path.startswith("/static/"):
         return
 
     valid = (
