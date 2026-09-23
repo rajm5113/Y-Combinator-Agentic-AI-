@@ -304,6 +304,7 @@ async function loadLeads() {
           <td>
             <strong>${escapeHtml(lead.startup_name)}</strong>
             <div style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(lead.batch)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-secondary);">${escapeHtml([lead.primary_location_city, lead.primary_location_country].filter(Boolean).join(', ') || 'Location not harvested')}</div>
           </td>
           <td>
             <div>${escapeHtml(lead.founder_name)}</div>
