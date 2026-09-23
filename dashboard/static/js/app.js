@@ -311,7 +311,7 @@ async function loadLeads() {
             <span class="badge badge-status ${statusClass}">${escapeHtml(lead.outreach_status)}</span>
           </td>
           <td>
-            ${lead.has_drafts ? '<span style="color: var(--accent-success); font-size: 0.8rem;">✓ 3 Channels</span>' : '<span style="color: var(--text-muted); font-size: 0.8rem;">None</span>'}
+            ${lead.has_drafts ? '<span style="color: var(--accent-success); font-size: 0.8rem;">✓ 3 Channels</span>' : '<span style="color: var(--text-muted); font-size: 0.8rem;">Not generated</span>'}
           </td>
           <td>
             <button class="btn btn-sm btn-primary" onclick="openLeadDetail(${lead.outreach_id})">
