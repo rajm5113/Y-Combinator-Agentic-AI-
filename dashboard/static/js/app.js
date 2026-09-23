@@ -932,19 +932,8 @@ function setupBlacklistForm() {
 }
 
 function setupGeographyListeners() {
-  const country = document.getElementById('pipeline-country-select');
-  const city = document.getElementById('pipeline-city-select');
-  if (!country || !city) return;
-
-  const syncCity = () => {
-    const isIndia = country.value === 'India';
-    const anyCountry = country.value === '';
-    city.disabled = !isIndia || anyCountry;
-    if (!isIndia) city.value = '';
-  };
-
-  country.addEventListener('change', syncCity);
-  syncCity();
+  // Target city is intentionally free-text with datalist suggestions so the
+  // candidate can choose any city without changing backend code.
 }
 
 // ─── Pipeline Trigger & 1s Polling ─────────────────────────────
