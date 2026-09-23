@@ -262,12 +262,27 @@ def locations_match(
     return "MISMATCH"
 
 
-def primary_location(locations: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:
-    """Return a stable primary location representation."""
+def primary_location(
+    locations: List[Dict[str, Any]],
+    preferred_country: Optional[str] = None,
+    preferred_city: Optional[str] = None,
+) -> Dict[str, Optional[str]]:
+    """Return a stable primary location, preferring the candidate's target geography."""
     if not locations:
         return {"country": None, "state": None, "city": None}
 
-    loc = locations[0]
+    target_country = _normalize_country(preferred_country) if preferred_country else None
+    target_city = _normalize_city(preferred_city) if preferred_city else None
+
+    ranked = sorted(
+        locations,
+        key=lambda loc: (
+            0 if target_city and loc.get("city") == target_city else 1,
+            0 if target_country and loc.get("country") == target_country else 1,
+            0 if loc.get("city") else 1,
+        ),
+    )
+    loc = ranked[0]
     return {
         "country": loc.get("country"),
         "state": loc.get("state"),
