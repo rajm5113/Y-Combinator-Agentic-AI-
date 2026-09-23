@@ -974,11 +974,12 @@ class StorageEngine:
 
         base_query += """ ORDER BY 
             CASE 
-                WHEN r.status IN ('draft', 'review') THEN 0 
-                WHEN r.status = 'approved' THEN 1 
-                WHEN r.status = 'sent' THEN 2 
-                WHEN r.status = 'replied' THEN 3 
-                ELSE 4 
+                WHEN r.status = 'discovered' THEN 0
+                WHEN r.status IN ('draft', 'review') THEN 1 
+                WHEN r.status = 'approved' THEN 2 
+                WHEN r.status = 'sent' THEN 3 
+                WHEN r.status = 'replied' THEN 4 
+                ELSE 5 
             END ASC,
             CASE 
                 WHEN e.fit_tier = 'HIGH' THEN 0 
