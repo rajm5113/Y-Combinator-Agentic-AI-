@@ -9,7 +9,7 @@ const state = {
   leadIds: [], // array of outreach_ids currently in view for sequential next/prev
   currentLeadIndex: -1,
   filters: {
-    status: 'pending_review',
+    status: '',
     tier: '',
     batch: '',
     q: '',
