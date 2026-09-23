@@ -420,7 +420,12 @@ class DiscoveryAgent(BaseAgent):
             )
 
         # ── Stats ──
-        stats["new_startups_inserted"] = stats["passed_industry_filter"]
+        # "passed_industry_filter" counts candidate hits, not successful DB writes.
+        # Keep the metric truthful when individual upserts fail.
+        stats["new_startups_inserted"] = max(
+            stats["passed_industry_filter"] - len(errors),
+            0,
+        )
 
         # ── Cache results ──
         if all_startups:

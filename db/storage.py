@@ -301,34 +301,59 @@ class StorageEngine:
                 CREATE INDEX IF NOT EXISTS idx_pipeline_runs_started ON pipeline_runs(started_at);
                 """)
 
-    # Backward-compatible schema upgrades for already-running SQLite/PostgreSQL databases.
+    # Backward-compatible schema upgrades for already-running databases.
+    # PostgreSQL aborts a transaction after a duplicate-column error, so the
+    # migration must be idempotent rather than catching duplicate errors inside
+    # one transaction and continuing.
     with get_db_connection() as conn:
-        for col, ddl in (
-            ("primary_location_country", "TEXT"),
-            ("primary_location_state", "TEXT"),
-            ("primary_location_city", "TEXT"),
-            ("office_locations", "TEXT DEFAULT '[]'"),
-            ("location_source", "TEXT"),
-            ("location_confidence", "REAL DEFAULT 0.0"),
-            ("yc_profile_locations", "TEXT DEFAULT '[]'"),
-            ("job_locations", "TEXT DEFAULT '[]'"),
-            ("location_evidence", "TEXT DEFAULT '[]'"),
-            ("employment_location_verified", "INTEGER DEFAULT 0"),
-        ):
-            try:
-                conn.execute(f"ALTER TABLE startups ADD COLUMN {col} {ddl}")
-            except Exception:
-                pass
+        import sqlite3
 
-        for col, ddl in (
-            ("target_country", "TEXT DEFAULT 'India'"),
-            ("target_city", "TEXT DEFAULT ''"),
-            ("target_location_mode", "TEXT DEFAULT 'office_or_job'"),
-        ):
-            try:
-                conn.execute(f"ALTER TABLE pipeline_runs ADD COLUMN {col} {ddl}")
-            except Exception:
-                pass
+        if isinstance(conn, sqlite3.Connection):
+            startup_migrations = (
+                ("primary_location_country", "TEXT"),
+                ("primary_location_state", "TEXT"),
+                ("primary_location_city", "TEXT"),
+                ("office_locations", "TEXT DEFAULT '[]'"),
+                ("location_source", "TEXT"),
+                ("location_confidence", "REAL DEFAULT 0.0"),
+                ("yc_profile_locations", "TEXT DEFAULT '[]'"),
+                ("job_locations", "TEXT DEFAULT '[]'"),
+                ("location_evidence", "TEXT DEFAULT '[]'"),
+                ("employment_location_verified", "INTEGER DEFAULT 0"),
+            )
+            pipeline_migrations = (
+                ("target_country", "TEXT DEFAULT 'India'"),
+                ("target_city", "TEXT DEFAULT ''"),
+                ("target_location_mode", "TEXT DEFAULT 'office_or_job'"),
+            )
+            for col, ddl in startup_migrations:
+                conn.execute(f"ALTER TABLE startups ADD COLUMN IF NOT EXISTS {col} {ddl}")
+            for col, ddl in pipeline_migrations:
+                conn.execute(f"ALTER TABLE pipeline_runs ADD COLUMN IF NOT EXISTS {col} {ddl}")
+        else:
+            startup_migrations = (
+                ("primary_location_country", "TEXT"),
+                ("primary_location_state", "TEXT"),
+                ("primary_location_city", "TEXT"),
+                ("office_locations", "TEXT DEFAULT '[]'"),
+                ("location_source", "TEXT"),
+                ("location_confidence", "REAL DEFAULT 0.0"),
+                ("yc_profile_locations", "TEXT DEFAULT '[]'"),
+                ("job_locations", "TEXT DEFAULT '[]'"),
+                ("location_evidence", "TEXT DEFAULT '[]'"),
+                ("employment_location_verified", "BOOLEAN DEFAULT FALSE"),
+            )
+            pipeline_migrations = (
+                ("target_country", "VARCHAR(64) DEFAULT 'India'"),
+                ("target_city", "VARCHAR(128) DEFAULT ''"),
+                ("target_location_mode", "VARCHAR(32) DEFAULT 'office_or_job'"),
+            )
+            for col, ddl in startup_migrations:
+                conn.execute(f"ALTER TABLE startups ADD COLUMN IF NOT EXISTS {col} {ddl}")
+            for col, ddl in pipeline_migrations:
+                conn.execute(f"ALTER TABLE pipeline_runs ADD COLUMN IF NOT EXISTS {col} {ddl}")
+
+            logger.info("PostgreSQL schema migration check complete")
 
     # --- Startup & Founder Operations ---
 
