@@ -64,27 +64,56 @@ class FitAgent(BaseAgent):
     def _build_evaluation_prompt(
         self, profile: Dict[str, Any], startup: Dict[str, Any], founders: List[Dict[str, Any]]
     ) -> List[Dict[str, str]]:
-        """Constructs a prompt enforcing rubric evaluation."""
+        """Construct an evidence-based fit rubric from the canonical candidate profile."""
+        scoring = profile.get("scoring_framework", {})
+        dimensions = scoring.get("dimensions", [])
+        thresholds = profile.get("scoring_thresholds", {})
+        career_focus = profile.get("career_focus", {})
+        capability_map = profile.get("capability_map", {})
+        current_experience = profile.get("current_experience", {})
+        startup_preferences = profile.get("startup_preferences", {})
+
+        dimension_lines = []
+        for dim in dimensions:
+            dimension_lines.append(
+                f"- {dim.get('name')}: {dim.get('weight', 0)} points — {dim.get('description', '')}"
+            )
+
+        capability_lines = []
+        for area, details in capability_map.items():
+            skills = ", ".join(details.get("demonstrated_skills", []))
+            if skills:
+                capability_lines.append(
+                    f"- {area} ({details.get('priority', 'secondary')}, {details.get('evidence_level', 'unknown')} evidence): {skills}"
+                )
+
         system_content = (
-            "You are a talent evaluation engine and startup technical assessor. "
-            "Your objective is to evaluate how strongly a candidate matches an early-stage startup. "
-            "Score the startup against the candidate strictly using the following 100-point rubric:\n"
-            "1. Technical & Architecture Overlap (0-35 points): Direct match between candidate core skills "
-            "(AI Agents, Systems, Python, APIs, RAG) and what the startup builds.\n"
-            "2. Role & Stage Alignment (0-25 points): Early team (<=25), Seed/Series A, hiring for technical roles.\n"
-            "3. High-Leverage Contribution Angle (0-25 points): Can candidate solve an immediate 0-to-1 bottleneck?\n"
-            "4. Domain Affinity (0-15 points): Startup domain relevance (AI/ML, DevTools, B2B SaaS, Data Infra).\n\n"
-            "Rules:\n"
-            "- Score must be an integer between 0 and 100.\n"
-            "- If score >= 75, fit_tier is 'HIGH' and should_contact is true.\n"
-            "- If score is 50-74, fit_tier is 'MEDIUM' and should_contact is true.\n"
-            "- If score < 50, fit_tier is 'LOW' and should_contact is false.\n"
-            "- Return a valid JSON object ONLY with the following exact keys:\n"
-            "  \"score\": int,\n"
-            "  \"fit_tier\": \"HIGH\" | \"MEDIUM\" | \"LOW\",\n"
-            "  \"should_contact\": bool,\n"
-            "  \"match_rationale\": list of 2-4 strings citing specific facts,\n"
-            "  \"contribution_angle\": string describing candidate's concrete pitch angle.\n"
+            "You are a talent-fit evaluation engine for startup outreach. "
+            "Evaluate how strongly a startup aligns with this specific candidate's interests, "
+            "demonstrated capabilities, current experience, target roles, and preferred problem spaces. "
+            "This is a candidate-to-startup fit score, not a judgement of whether the startup is good.
+
+"
+            "SCORING FRAMEWORK (100 points total):
+"
+            + "\n".join(dimension_lines)
+            + f"\nThresholds: HIGH >= {thresholds.get('high', 75)}, "
+              f"MEDIUM >= {thresholds.get('medium', 50)}, "
+              f"LOW < {thresholds.get('medium', 50)}. "
+              f"should_contact is true at >= {thresholds.get('should_contact_from', 50)}.\n\n"
+            "Important scoring rules:\n"
+            "- Internally allocate integer points to each dimension and make the final score equal their sum. "
+            "Do not invent facts to justify points.\n"
+            "- Agentic AI / AI-powered analytics is a primary interest.\n"
+            "- Data Analytics / Business Intelligence is also a primary interest.\n"
+            "- Business Analysis / RevOps alignment is a primary interest supported by current Payoneer experience.\n"
+            "- Demonstrated skills and current work evidence should carry more weight than merely aspirational skills.\n"
+            "- Do not require an exact job title when the underlying problem space and contribution opportunity align.\n"
+            "- Missing public hiring information should not heavily penalize a startup when its product/problem space is strongly aligned.\n"
+            "- Use only facts present in the startup data, jobs data, founder context, and candidate profile.\n"
+            "- Return valid JSON only with the exact keys: score, fit_tier, should_contact, match_rationale, contribution_angle.\n"
+            "- match_rationale must contain 2-4 concise evidence-based reasons.\n"
+            "- contribution_angle must describe one concrete way the candidate could contribute.\n"
         )
 
         founder_summaries = []
@@ -95,13 +124,22 @@ class FitAgent(BaseAgent):
             founder_summaries.append(f"- {name} ({title}): {bio[:200]}")
 
         user_content = (
-            f"Candidate Profile:\n"
-            f"- Name: {profile.get('candidate_name')}\n"
-            f"- Headline: {profile.get('headline')}\n"
-            f"- Target Roles: {', '.join(profile.get('target_roles', []))}\n"
-            f"- Skills: {json.dumps(profile.get('skills', {}))}\n"
-            f"- Highlights: {json.dumps(profile.get('experience_highlights', []))}\n\n"
-            f"Startup Information:\n"
+            "CANDIDATE PROFILE\n"
+            f"- Name: {profile.get('candidate', {}).get('name', profile.get('candidate_name'))}\n"
+            f"- Current role: {current_experience.get('role') or profile.get('candidate', {}).get('current_role')}\n"
+            f"- Primary interests: {json.dumps(career_focus.get('primary_interest_areas', []))}\n"
+            f"- Secondary interests: {json.dumps(career_focus.get('secondary_interest_areas', []))}\n"
+            f"- Target roles: {json.dumps(career_focus.get('target_roles', profile.get('target_roles', [])))}\n"
+            f"- Preferred problem spaces: {json.dumps(career_focus.get('preferred_problem_spaces', []))}\n"
+            f"- Current experience evidence: {json.dumps(current_experience.get('evidence', []))}\n"
+            "Demonstrated capability map:\n"
+            + "\n".join(capability_lines)
+            + "\nPreferred startup characteristics:\n"
+            f"- Industries: {json.dumps(startup_preferences.get('preferred_industries', []))}\n"
+            f"- Stages: {json.dumps(startup_preferences.get('preferred_stages', []))}\n"
+            f"- Team size preference: <= {startup_preferences.get('preferred_team_size_max', 25)}\n"
+            f"- Environment: {json.dumps(startup_preferences.get('environment_preferences', []))}\n\n"
+            "STARTUP INFORMATION\n"
             f"- Name: {startup.get('name')}\n"
             f"- One Liner: {startup.get('one_liner')}\n"
             f"- Description: {startup.get('long_description')}\n"
