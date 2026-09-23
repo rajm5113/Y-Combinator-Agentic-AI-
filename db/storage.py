@@ -566,6 +566,12 @@ class StorageEngine:
                     item["jobs_data"] = json.loads(item["jobs_data"])
                 except Exception:
                     item["jobs_data"] = []
+            for field in ("office_locations", "yc_profile_locations", "job_locations", "location_evidence"):
+                try:
+                    item[field] = json.loads(item.get(field) or "[]")
+                except Exception:
+                    item[field] = []
+            item["employment_location_verified"] = bool(item.get("employment_location_verified"))
             return item
 
     @staticmethod
