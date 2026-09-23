@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YC Founder Outreach — Human Review & Pipeline Dashboard</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=11">
+  <link rel="stylesheet" href="/static/css/style.css?v=12">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
 </head>
 <body>
@@ -328,46 +328,13 @@
                 <option value="Fall 2026">Fall 2026</option>
               </select>
             </div>
-            <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Target Country</label>
-              <select id="pipeline-country-select" class="select-input">
-                <option value="India" selected>India</option>
-                <option value="">Any Country</option>
-                <option value="United States">United States</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="Canada">Canada</option>
-                <option value="Singapore">Singapore</option>
-                <option value="United Arab Emirates">United Arab Emirates</option>
-                <option value="Australia">Australia</option>
-                <option value="Germany">Germany</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Target City (optional)</label>
-              <input id="pipeline-city-select" class="text-input" list="pipeline-city-options" placeholder="All India — type a city if needed" />
-              <datalist id="pipeline-city-options">
-                <option value="Bengaluru"></option>
-                <option value="Hyderabad"></option>
-                <option value="Pune"></option>
-                <option value="Mumbai"></option>
-                <option value="Delhi NCR"></option>
-                <option value="Gurugram"></option>
-                <option value="Noida"></option>
-                <option value="Chennai"></option>
-                <option value="Ahmedabad"></option>
-                <option value="Jaipur"></option>
-                <option value="Chandigarh"></option>
-                <option value="Kolkata"></option>
-                <option value="Kochi"></option>
-              </datalist>
-            </div>
-            <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Location Match</label>
-              <select id="pipeline-location-mode" class="select-input">
-                <option value="office_or_job" selected>Current Office or Job in Location</option>
-                <option value="job_only">Active Job in Location</option>
-                <option value="office_only">Current Office in Location</option>
-              </select>
+            <div style="grid-column: 1 / -1; padding: 0.75rem 0.9rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: rgba(59, 130, 246, 0.06);">
+              <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Employment Target</div>
+              <div style="font-size: 0.9rem; color: var(--text-primary); font-weight: 600;">🇮🇳 India — All Cities</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                Any startup worldwide is eligible when it has current employment evidence in India. City preference only controls processing order:
+                <strong>Bengaluru → Delhi NCR → Gurugram → Hyderabad → Noida → Pune → Mumbai → Chennai → other Indian cities</strong>.
+              </div>
             </div>
             <div>
               <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;" >Target Startup Count</label>
@@ -524,6 +491,6 @@
 
   </main>
 
-  <script src="/static/js/app.js?v=11"></script>
+  <script src="/static/js/app.js?v=12"></script>
 </body>
 </html>

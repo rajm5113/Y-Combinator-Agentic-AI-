@@ -231,6 +231,30 @@ def extract_job_locations(jobs: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]
     return normalize_locations(output)
 
 
+def india_employment_rank(
+    office_locations: List[Dict[str, Any]],
+    job_locations: List[Dict[str, Any]],
+    city_priority: List[str],
+) -> Optional[tuple]:
+    """Return an ordering key for India employment evidence; None means not eligible."""
+    priority = {city: idx for idx, city in enumerate(city_priority)}
+    evidence = []
+
+    for loc in office_locations or []:
+        if loc.get("country") == "India":
+            evidence.append((priority.get(loc.get("city"), 10_000), 0, loc))
+    for loc in job_locations or []:
+        if loc.get("country") == "India":
+            evidence.append((priority.get(loc.get("city"), 10_000), 1, loc))
+
+    if not evidence:
+        return None
+
+    # Lower is better: Bengaluru before Delhi NCR before Gurugram, etc.
+    best = min(evidence, key=lambda item: (item[0], item[1]))
+    return best[0], best[1], best[2].get("city") or "", best[2].get("country") or "India"
+
+
 def locations_match(
     office_locations: List[Dict[str, Any]],
     job_locations: List[Dict[str, Any]],

@@ -1,5 +1,5 @@
 {
-  "profile_version": "3.0",
+  "profile_version": "3.1",
   "profile_purpose": "Canonical candidate-interest and evidence profile used by the Fit Agent to score startup alignment.",
   "candidate": {
     "name": "Raj Mishra",
@@ -349,20 +349,25 @@
     "default_city_label": "All India",
     "city_priority_order": [
       "Bengaluru",
-      "Hyderabad",
-      "Pune",
-      "Mumbai",
       "Delhi NCR",
       "Gurugram",
+      "Hyderabad",
       "Noida",
-      "Chennai"
+      "Pune",
+      "Mumbai",
+      "Chennai",
+      "Ahmedabad",
+      "Jaipur",
+      "Chandigarh",
+      "Kolkata",
+      "Kochi"
     ],
     "location_signal_priority": [
-      "active job location matching target geography",
-      "current company/office location matching target geography",
-      "remote role explicitly open from target country"
+      "current company office in India",
+      "active job location in India",
+      "remote role explicitly open from India"
     ],
-    "goal": "Prioritize internships and jobs that can realistically be performed from India. A foreign HQ does not disqualify a startup when it has a current India office or an active India-based job.",
+    "goal": "Find startups with a realistic current employment footprint in India regardless of where the startup is headquartered or listed on YC. Accept any Indian city; use the city priority only to order which matches are processed first.",
     "unknown_location_policy": "hold"
   }
 }
