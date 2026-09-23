@@ -132,13 +132,15 @@ class BackupEngine:
 
     def restore_backup(self, filepath: str) -> Dict[str, Any]:
         """Restores all tables from a snapshot file inside an atomic transaction."""
-        file_path = Path(filepath)
-        if not file_path.exists():
-            candidate = self.backup_dir / filepath
-            if candidate.exists():
-                file_path = candidate
-            else:
-                raise FileNotFoundError(f"Backup file not found: {filepath}")
+        requested = Path(filepath)
+        # Restore is intentionally limited to snapshots inside backup_dir.
+        # This prevents path traversal and arbitrary local file reads.
+        if requested.is_absolute() or requested.name != filepath or requested.name in (".", ".."):
+            raise ValueError("Invalid backup filename")
+        file_path = (self.backup_dir / requested.name).resolve()
+        backup_root = self.backup_dir.resolve()
+        if file_path.parent != backup_root or not file_path.exists():
+            raise FileNotFoundError(f"Backup file not found: {requested.name}")
 
         # Read compressed or uncompressed
         if str(file_path).endswith(".gz"):

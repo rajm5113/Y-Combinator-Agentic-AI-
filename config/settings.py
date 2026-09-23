@@ -44,8 +44,9 @@ class Settings(BaseSettings):
         validation_alias="REDIS_URL",
     )
     use_sqlite_fallback: bool = Field(
-        default=True,
-        description="Enable automatic local SQLite fallback if PostgreSQL is unavailable",
+        default=False,
+        validation_alias="USE_SQLITE_FALLBACK",
+        description="Enable automatic local SQLite fallback if PostgreSQL is unavailable. Keep false in production to avoid split-brain data.",
     )
     use_inmemory_cache_fallback: bool = Field(
         default=True,
@@ -166,6 +167,21 @@ class Settings(BaseSettings):
     dashboard_auto_open_browser: bool = Field(
         default=False if (os.getenv("PORT") or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("DYNO")) else True,
         description="Automatically open browser when dashboard launches (disabled in cloud environments)",
+    )
+
+    # Public deployment protection (HTTP Basic Auth). Keep disabled only for localhost-only use.
+    dashboard_auth_enabled: bool = Field(
+        default=False,
+        validation_alias="DASHBOARD_AUTH_ENABLED",
+        description="Require HTTP Basic Auth for the dashboard and API endpoints",
+    )
+    dashboard_auth_username: str = Field(
+        default="",
+        validation_alias="DASHBOARD_AUTH_USERNAME",
+    )
+    dashboard_auth_password: str = Field(
+        default="",
+        validation_alias="DASHBOARD_AUTH_PASSWORD",
     )
 
 

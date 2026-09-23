@@ -6,6 +6,8 @@ StorageEngine + MemoryManager that the CLI uses.
 """
 
 import asyncio
+import os
+import secrets
 import csv
 import io
 import json
@@ -15,9 +17,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from config.health import health_checker
 from config.logging_buffer import global_log_buffer
@@ -52,6 +55,31 @@ from dashboard.api_models import (
 
 logger = logging.getLogger("dashboard")
 
+basic_auth = HTTPBasic(auto_error=False)
+
+async def require_dashboard_auth(
+    request: Request,
+    credentials: Optional[HTTPBasicCredentials] = Depends(basic_auth),
+):
+    """Protect API/state-changing endpoints when dashboard auth is enabled."""
+    if not settings.dashboard_auth_enabled or not request.url.path.startswith("/api/"):
+        return
+
+    valid = (
+        credentials is not None
+        and secrets.compare_digest(credentials.username, settings.dashboard_auth_username)
+        and secrets.compare_digest(credentials.password, settings.dashboard_auth_password)
+        and bool(settings.dashboard_auth_username)
+        and bool(settings.dashboard_auth_password)
+    )
+    if not valid:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
+
 # --- Background pipeline state (module-level, single-user tool) ---
 _pipeline_lock = asyncio.Lock()
 _current_orchestrator: Optional[MasterOrchestrator] = None
@@ -78,6 +106,7 @@ app = FastAPI(
     title="YC Outreach Dashboard",
     version="1.0.0",
     lifespan=lifespan,
+    dependencies=[Depends(require_dashboard_auth)],
 )
 
 # Serve static frontend files
@@ -302,32 +331,33 @@ async def delete_blacklist(entry_id: int):
 
 @app.post("/api/pipeline/run", response_model=PipelineStatusResponse)
 async def trigger_pipeline(payload: PipelineRunRequest, background_tasks: BackgroundTasks):
-    """Launches the pipeline as an async background task."""
-    if _pipeline_state["is_running"]:
-        raise HTTPException(409, "A pipeline run is already in progress")
+    """Launch exactly one operator-triggered pipeline run."""
+    async with _pipeline_lock:
+        if _pipeline_state["is_running"]:
+            raise HTTPException(409, "A pipeline run is already in progress")
 
-    config = PipelineConfig(
-        batches=payload.batches,
-        industries=payload.industries,
-        limit=payload.limit,
-        min_fit_score=payload.min_fit_score,
-        max_concurrency=payload.max_concurrency,
-        dry_run=payload.dry_run,
-    )
+        config = PipelineConfig(
+            batches=payload.batches,
+            industries=payload.industries,
+            limit=payload.limit,
+            min_fit_score=payload.min_fit_score,
+            max_concurrency=payload.max_concurrency,
+            dry_run=payload.dry_run,
+        )
 
-    _pipeline_state["is_running"] = True
-    _pipeline_state["started_at"] = datetime.now(timezone.utc).isoformat()
-    _pipeline_state["progress"] = "Starting..."
-    _pipeline_state["session_id"] = None
-    _pipeline_state["last_report"] = None
+        _pipeline_state["is_running"] = True
+        _pipeline_state["started_at"] = datetime.now(timezone.utc).isoformat()
+        _pipeline_state["progress"] = "Starting..."
+        _pipeline_state["session_id"] = None
+        _pipeline_state["last_report"] = None
 
-    background_tasks.add_task(_run_pipeline_background, config)
+        background_tasks.add_task(_run_pipeline_background, config)
 
-    return PipelineStatusResponse(
-        is_running=True,
-        started_at=_pipeline_state["started_at"],
-        progress="Starting...",
-    )
+        return PipelineStatusResponse(
+            is_running=True,
+            started_at=_pipeline_state["started_at"],
+            progress="Starting...",
+        )
 
 
 @app.get("/api/pipeline/status", response_model=PipelineStatusResponse)
@@ -470,6 +500,11 @@ async def export_leads(
 
 # ─── Phase 6: Health & Diagnostics ─────────────────────────────
 
+@app.get("/health")
+async def render_health():
+    """Minimal unauthenticated health endpoint for Render infrastructure probes."""
+    return {"status": "ok"}
+
 @app.get("/api/health", response_model=HealthResponse)
 async def check_health():
     """Runs end-to-end diagnostics on PostgreSQL, Redis, OpenRouter, and Pipeline."""
@@ -548,7 +583,10 @@ async def list_backups():
 @app.post("/api/backups/restore")
 async def restore_backup(payload: BackupRestoreRequest):
     """Restores database state from a specified backup snapshot."""
-    res = backup_engine.restore_backup(payload.filename)
+    filename = os.path.basename(payload.filename)
+    if filename != payload.filename:
+        raise HTTPException(400, "Invalid backup filename")
+    res = backup_engine.restore_backup(filename)
     if not res.get("success"):
         raise HTTPException(400, res.get("error", "Restore failed"))
     return res
