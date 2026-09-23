@@ -369,17 +369,16 @@ class MasterOrchestrator:
                 filtered += 1
                 continue
 
-            try:
-                office_locations = json.loads(startup.get("office_locations") or "[]")
-            except Exception:
-                office_locations = []
-
-            try:
-                jobs = json.loads(startup.get("jobs_data") or "[]")
-            except Exception:
-                jobs = []
-
-            job_locations = extract_job_locations(jobs)
+            office_locations = startup.get("office_locations") or []
+            job_locations = startup.get("job_locations") or []
+            if not job_locations:
+                raw_jobs = startup.get("jobs_data") or []
+                if isinstance(raw_jobs, str):
+                    try:
+                        raw_jobs = json.loads(raw_jobs)
+                    except Exception:
+                        raw_jobs = []
+                job_locations = extract_job_locations(raw_jobs)
             if self.config.target_location_mode == "office_only":
                 job_locations = []
             elif self.config.target_location_mode == "job_only":
